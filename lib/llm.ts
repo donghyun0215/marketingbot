@@ -73,14 +73,42 @@ async function callGemini(a: GenerateArgs): Promise<string> {
   return text;
 }
 
+/**
+ * 사용 가능한 모델을 런타임에 확인한다.
+ * 제공자들이 모델을 예고 없이 폐기하고(gemini-2.0-flash, llama-3.3-70b 둘 다 겪음),
+ * 그러면 발표 당일에 404로 죽는다. 하드코딩된 이름 하나에 의존하지 않는다.
+ */
+let groqModelCache: string | null = null;
+async function resolveGroqModel(key: string): Promise<string> {
+  if (process.env.GROQ_MODEL) return process.env.GROQ_MODEL;
+  if (groqModelCache) return groqModelCache;
+  try {
+    const res = await fetch("https://api.groq.com/openai/v1/models", {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    const data = await res.json();
+    const ids: string[] = (data?.data ?? []).map((m: any) => m.id);
+    // 한국어 장문 생성에 쓸 만한 큰 모델을 우선한다. whisper 등 비텍스트 모델은 제외.
+    const preferred =
+      ids.find((i) => /llama.*70b/i.test(i)) ??
+      ids.find((i) => /llama.*(instruct|versatile)/i.test(i)) ??
+      ids.find((i) => !/whisper|guard|tts|embed/i.test(i));
+    groqModelCache = preferred ?? "llama-3.1-8b-instant";
+  } catch {
+    groqModelCache = "llama-3.1-8b-instant";
+  }
+  return groqModelCache;
+}
+
 async function callGroq(a: GenerateArgs): Promise<string> {
   const key = process.env.GROQ_API_KEY;
   if (!key) throw new Error("GROQ_API_KEY missing");
+  const model = await resolveGroqModel(key);
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
     body: JSON.stringify({
-      model: modelName(),
+      model,
       messages: [
         ...(a.system ? [{ role: "system", content: a.system }] : []),
         { role: "user", content: a.prompt },
