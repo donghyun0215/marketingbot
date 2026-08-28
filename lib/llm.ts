@@ -24,7 +24,14 @@ export type GenerateArgs = {
 };
 
 function provider(): LlmProvider {
-  return (process.env.LLM_PROVIDER as LlmProvider) ?? "gemini";
+  // 대소문자·공백을 허용한다. 환경변수는 사람이 손으로 넣는 값이라 흔들린다.
+  const raw = (process.env.LLM_PROVIDER ?? "gemini").trim().toLowerCase();
+  if (raw === "gemini" || raw === "groq" || raw === "anthropic") return raw;
+  // 모르는 값을 조용히 넘기면 엉뚱한 제공자로 흘러가 "ANTHROPIC_API_KEY missing" 같은
+  // 원인과 무관한 오류가 나온다(실제로 겪음). 무엇이 잘못됐는지 그대로 알린다.
+  throw new Error(
+    `LLM_PROVIDER 값이 올바르지 않습니다: "${process.env.LLM_PROVIDER}". gemini / groq / anthropic 중 하나여야 합니다.`
+  );
 }
 
 /** 지금 설정된 모델 이름. 화면에 표시해 재현 가능성을 남긴다. */
@@ -165,8 +172,8 @@ async function callAnthropic(a: GenerateArgs): Promise<string> {
  * 429는 시간이 지나면 반드시 풀리는 오류이므로 길게, 여러 번 기다린다.
  */
 export async function generate(a: GenerateArgs, retries = 4): Promise<string> {
-  const fn =
-    provider() === "gemini" ? callGemini : provider() === "groq" ? callGroq : callAnthropic;
+  const p = provider();
+  const fn = p === "gemini" ? callGemini : p === "groq" ? callGroq : callAnthropic;
   let lastError: unknown;
   let args = { ...a };
   for (let i = 0; i <= retries; i++) {
