@@ -168,9 +168,10 @@ export async function generate(a: GenerateArgs, retries = 4): Promise<string> {
   const fn =
     provider() === "gemini" ? callGemini : provider() === "groq" ? callGroq : callAnthropic;
   let lastError: unknown;
+  let args = { ...a };
   for (let i = 0; i <= retries; i++) {
     try {
-      return await fn(a);
+      return await fn(args);
     } catch (e) {
       lastError = e;
       const msg = String(e);
@@ -179,6 +180,16 @@ export async function generate(a: GenerateArgs, retries = 4): Promise<string> {
       // 분당 한도와 구분해서, 일일 한도면 즉시 포기하고 원인을 그대로 알린다.
       const perDay = /PerDay|per day|daily/i.test(msg);
       if (perDay) throw new Error("DAILY_QUOTA_EXCEEDED");
+
+      // 요청이 제공자의 분당 토큰 한도보다 크면(413) 기다려도 같은 결과다.
+      // 예산을 절반으로 줄여 즉시 다시 시도한다. 본문이 조금 짧아질 뿐 실패하지는 않는다.
+      if (/413|too large|tokens per minute|TPM/i.test(msg)) {
+        const next = Math.max(1200, Math.floor((args.maxTokens ?? 2048) / 2));
+        if (next < (args.maxTokens ?? 2048) && i < retries) {
+          args = { ...args, maxTokens: next };
+          continue;
+        }
+      }
       const rateLimited = /429|413|quota|rate|tokens per minute|TPM/i.test(msg);
       const retriable = rateLimited || /5\d\d/.test(msg);
       if (!retriable || i === retries) break;

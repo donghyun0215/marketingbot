@@ -86,7 +86,7 @@ export async function generateDraft(
   profile: VoiceProfile
 ): Promise<DraftResult> {
   // 순차 호출: 무료 티어의 분당 요청 제한을 피한다.
-  const baseline = await generate({ prompt: baselinePrompt(input), maxTokens: 16384 });
+  const baseline = await generate({ prompt: baselinePrompt(input), maxTokens: 6000 });
   // 분량 미달은 수치 밀도를 왜곡시켜 채점을 망친다. 한 번 더 요청한다.
   let voiced = "";
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -95,7 +95,7 @@ export async function generateDraft(
       prompt:
         voicedPrompt(input, profile) +
         (attempt > 0 ? `\n\n직전 시도가 너무 짧았다. 반드시 1,400자 이상으로 쓴다.` : ""),
-      maxTokens: 16384,
+      maxTokens: 6000,
     });
     if (voiced.length >= 1200) break;
   }
