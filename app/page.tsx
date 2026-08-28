@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { analyze } from "@/lib/flywheel/analyze";
 import { Metric, Panel, AttributionBar } from "@/components/Metric";
+import { AdoptButton, DecideButtons } from "@/components/Actions";
 
 export const dynamic = "force-dynamic";
 // 승인·반려 결과는 즉시 화면에 보여야 한다. 캐시된 페이지를 재사용하면
@@ -73,14 +74,7 @@ export default async function Dashboard() {
                         </span>
                       </div>
                     </div>
-                    <div className="flex shrink-0 gap-1.5">
-                      <button className="rounded border border-[var(--line)] px-2.5 py-1 text-[12px] hover:bg-[var(--canvas)]">
-                        승인
-                      </button>
-                      <button className="rounded border border-[var(--line)] px-2.5 py-1 text-[12px] hover:bg-[var(--canvas)]">
-                        반려
-                      </button>
-                    </div>
+                    <DecideButtons contentId={c.id} />
                   </li>
                 );
               })}
@@ -121,13 +115,8 @@ export default async function Dashboard() {
               <li key={s.id} className="py-2.5 first:pt-0">
                 <div className="text-[13.5px]">{s.topic}</div>
                 <div className="mt-1 text-[12px] leading-snug text-[var(--muted)]">{s.rationale}</div>
-                <div className="mt-2 flex gap-1.5">
-                  <button className="rounded border border-[var(--line)] px-2.5 py-1 text-[12px] hover:bg-[var(--canvas)]">
-                    채택하고 초안 생성
-                  </button>
-                  <button className="rounded border border-[var(--line)] px-2.5 py-1 text-[12px] text-[var(--muted)] hover:bg-[var(--canvas)]">
-                    보류
-                  </button>
+                <div className="mt-2">
+                  <AdoptButton suggestionId={s.id} />
                 </div>
               </li>
             ))}
