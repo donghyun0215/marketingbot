@@ -76,10 +76,29 @@ function rhythmScore(text: string, p: VoiceProfile, notes: string[]) {
   }
   const endingScore = Math.max(0, 100 - (diff / 2) * 100);
 
+  /**
+   * 어미 일관성 — 분포만으로는 잡히지 않는 결함.
+   * 합니다체와 해요체를 문장마다 번갈아 써도 전체 분포는 코퍼스와 일치한다.
+   * 즉 "분포는 맞는데 읽으면 어색한" 글이 통과한다. 실제로 통과했다.
+   * 사람이 블라인드 테스트에서 AI 글을 골라낸 근거가 바로 이 어색함이었다.
+   * 실측: 실제 글의 인접 문장 문체 전환률 중앙값 10.4%, p75 22.0%.
+   *      우리 생성물은 78.9%였다.
+   */
+  const seq: string[] = [];
+  for (const s2 of sents) {
+    const e = endingOf(s2);
+    if (e === "합니다체" || e === "해요체") seq.push(e);
+  }
+  let switches = 0;
+  for (let i = 1; i < seq.length; i++) if (seq[i] !== seq[i - 1]) switches++;
+  const switchRate = seq.length > 2 ? (switches / (seq.length - 1)) * 100 : 0;
+  // p75(22%)까지는 만점, 그 위로는 비례 감점
+  const coherenceScore = Math.max(0, Math.min(100, 100 - Math.max(0, switchRate - 22) * 1.6));
+
   notes.push(
-    `문장 평균 ${m.toFixed(1)}자 (코퍼스 ${p.sentence.mean}자), 어미 분포 차이 ${(diff / 2 * 100).toFixed(0)}%`
+    `문장 평균 ${m.toFixed(1)}자 (코퍼스 ${p.sentence.mean}자), 어미 분포 차이 ${(diff / 2 * 100).toFixed(0)}%, 문체 전환률 ${switchRate.toFixed(0)}% (자사 평균 10%)`
   );
-  return meanScore * 0.4 + sdScore * 0.2 + endingScore * 0.4;
+  return meanScore * 0.25 + sdScore * 0.15 + endingScore * 0.25 + coherenceScore * 0.35;
 }
 
 /** 고유 용어 표기가 정확한가. 흔들리면 감점. */

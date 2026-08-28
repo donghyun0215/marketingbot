@@ -162,7 +162,8 @@ export function profileToInstructions(p: VoiceProfile): string {
   return [
     `문장 길이는 평균 ${p.sentence.mean}자, 대부분 ${p.sentence.p25}~${p.sentence.p75}자 사이에 둔다.`,
     `문단은 평균 ${p.paragraph.meanSentences}문장으로 끊는다.`,
-    `종결 어미 비율: ${topEndings}.`,
+    `종결 어미는 한 가지로 통일한다. 주력은 ${Object.entries(p.endings).sort((a, b) => b[1] - a[1])[0][0]}이며,`,
+    `문장마다 "습니다"와 "해요"를 번갈아 쓰지 않는다. 문체가 흔들리면 사람이 쓴 글로 읽히지 않는다.`,
     `자사 지칭(우리/코드프레소)은 1,500자 기준 ${Math.round(p.firstPersonDensity * 1.5)}회 정도가 자연스럽다.`,
     `수치·사례 인용은 1,500자 기준 ${Math.max(2, Math.round(p.evidenceDensity * 1.5))}회 정도. 그 이상 넣으면 오히려 어색하다.`,
     `근거 없는 형용사보다 구체적 사실을 쓰되, 숫자로 도배하지 않는다.`,
