@@ -88,14 +88,14 @@ async function resolveGroqModel(key: string): Promise<string> {
     });
     const data = await res.json();
     const ids: string[] = (data?.data ?? []).map((m: any) => m.id);
-    // 한국어 장문 생성에 쓸 만한 큰 모델을 우선한다. whisper 등 비텍스트 모델은 제외.
-    const preferred =
-      ids.find((i) => /llama.*70b/i.test(i)) ??
-      ids.find((i) => /llama.*(instruct|versatile)/i.test(i)) ??
-      ids.find((i) => !/whisper|guard|tts|embed/i.test(i));
-    groqModelCache = preferred ?? "llama-3.1-8b-instant";
+    // 한국어 실측 결과 순서. qwen 계열은 본문에 중국어가 섞여 나와 제외한다.
+    // (테스트: "Integration 비용과 시간을预估 할 수 있습니다")
+    const rank = [/gpt-oss-120b/i, /gpt-oss/i, /llama.*70b/i, /llama/i, /compound(?!-mini)/i];
+    const usable = ids.filter((i) => !/whisper|guard|tts|embed|orpheus|qwen|allam/i.test(i));
+    groqModelCache =
+      rank.map((re) => usable.find((i) => re.test(i))).find(Boolean) ?? usable[0] ?? "openai/gpt-oss-120b";
   } catch {
-    groqModelCache = "llama-3.1-8b-instant";
+    groqModelCache = "openai/gpt-oss-120b";
   }
   return groqModelCache;
 }
