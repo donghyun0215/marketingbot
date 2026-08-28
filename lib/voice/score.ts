@@ -107,20 +107,37 @@ function terminologyScore(text: string, notes: string[]) {
   return Math.max(0, Math.min(100, score));
 }
 
-/** 수치·사례 밀도와 자사 지칭 밀도가 코퍼스와 비슷한가. */
+/**
+ * 근거와 자사 언급이 실제로 들어 있는가.
+ *
+ * 밀도(1,000자당)로 재던 것을 절대 개수 기준으로 바꿨다. 이유:
+ * 밀도는 글이 길어질수록 낮아지므로, 회사 이름을 한 번도 쓰지 않은 2,700자 글이
+ * 고유 용어 5개를 쓴 1,300자 글보다 높은 점수를 받는 역전이 실제로 발생했다.
+ * "우리 회사"라는 일반 표현이 자사 지칭으로 집계된 것도 같은 오류였다.
+ *
+ * 자사 콘텐츠라면 회사·제품 이름과 근거 수치가 몇 번은 반드시 등장한다.
+ * 그것을 밀도가 아니라 "있었는가, 몇 개나"로 센다.
+ */
 function structureScore(text: string, p: VoiceProfile, notes: string[]) {
-  const per1k = (c: number) => (c / Math.max(text.length, 1)) * 1000;
-  const evidence = per1k((text.match(/\d+(\.\d+)?\s*(%|명|건|배|개|년|개월|시간|팀|곳)/g) ?? []).length);
-  const firstPerson = per1k((text.match(/우리|저희|코드프레소는|코드프레소가/g) ?? []).length);
+  const per1500 = 1500;
+  const scale = Math.max(text.length / per1500, 0.6); // 매우 짧은 글에 과한 요구를 하지 않는다
 
-  const ratio = (a: number, b: number) => (b === 0 ? (a === 0 ? 1 : 0) : Math.min(a / b, b / a || 0));
-  const evScore = Math.min(100, ratio(evidence, p.evidenceDensity) * 100);
-  const fpScore = Math.min(100, ratio(firstPerson, p.firstPersonDensity) * 100);
+  // 자사 지칭: 일반적인 "우리"가 아니라 회사·제품을 특정하는 표현만 센다
+  const brandHits = (text.match(/코드프레소/g) ?? []).length;
+  const productHits = TERMINOLOGY.filter((t) => t !== "코드프레소" && text.includes(t)).length;
+
+  const evidenceHits = (text.match(/\d+(\.\d+)?\s*(%|명|건|배|개|년|개월|시간|팀|곳|회|위)/g) ?? []).length;
+
+  // 기준: 1,500자당 브랜드 언급 2회, 제품·고유 용어 2종, 근거 수치 2회면 충분하다.
+  const ratio = (hit: number, target: number) => Math.min(1, hit / Math.max(target * scale, 1));
+  const brandScore = ratio(brandHits, 2) * 100;
+  const productScore = ratio(productHits, 2) * 100;
+  const evidenceScore = ratio(evidenceHits, 2) * 100;
 
   notes.push(
-    `수치 인용 ${evidence.toFixed(2)}/1k (코퍼스 ${p.evidenceDensity}), 자사 지칭 ${firstPerson.toFixed(2)}/1k (코퍼스 ${p.firstPersonDensity})`
+    `자사 언급 ${brandHits}회 · 고유 용어 ${productHits}종 · 근거 수치 ${evidenceHits}회`
   );
-  return evScore * 0.6 + fpScore * 0.4;
+  return brandScore * 0.4 + productScore * 0.3 + evidenceScore * 0.3;
 }
 
 export function scoreVoice(
