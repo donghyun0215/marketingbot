@@ -22,6 +22,10 @@ def alias(name: str, industry_guess: str) -> str:
 def post(table, rows):
     if not rows:
         return
+    # PostgREST는 한 배치 안의 모든 객체가 동일한 키 집합을 갖기를 요구한다.
+    # 블로그 행과 링크드인 행은 컬럼이 다르므로 합집합으로 정규화한다.
+    keys = sorted({k for r in rows for k in r})
+    rows = [{k: r.get(k) for k in keys} for r in rows]
     req = urllib.request.Request(
         f"{URL}/rest/v1/{table}",
         data=json.dumps(rows).encode(),
@@ -114,3 +118,9 @@ post("performance_metrics", blog + li)
 post("search_queries", queries)
 post("inquiries", inq)
 print("anonymized companies:", len(ANON), "(실명은 저장하지 않음)")
+
+# NOTE (재실행 시): 이 스크립트는 append-only라 그대로 다시 돌리면 행이 중복된다.
+# 재임포트 전 반드시 대상 테이블을 비울 것.
+#   DELETE /rest/v1/performance_metrics?id=gt.0
+#   DELETE /rest/v1/search_queries?id=gt.0
+#   DELETE /rest/v1/inquiries?id=gt.0
