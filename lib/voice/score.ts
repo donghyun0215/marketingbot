@@ -11,6 +11,7 @@
  *  - structure:   근거 수치 없이 형용사로 채운 글
  */
 
+import { GenericBaseline, genericScore } from "./generic";
 import {
   VoiceProfile,
   splitSentences,
@@ -20,11 +21,16 @@ import {
 
 export type VoiceScore = {
   total: number;
-  axes: { lexicon: number; rhythm: number; terminology: number; structure: number };
+  axes: { lexicon: number; rhythm: number; terminology: number; structure: number; generic: number };
   notes: string[];
 };
 
-const WEIGHTS = { lexicon: 0.3, rhythm: 0.25, terminology: 0.2, structure: 0.25 };
+/**
+ * 어휘 축의 비중을 낮춘 이유: 같은 주제를 주면 범용 LLM도 어휘가 우연히 겹쳐
+ * 쉽게 포화된다. 즉 변별력이 낮다. 반대로 범용성 축은 브랜드 문체와 범용 문체를
+ * 직접 가르므로 비중을 높게 둔다.
+ */
+const WEIGHTS = { lexicon: 0.2, rhythm: 0.2, terminology: 0.15, structure: 0.15, generic: 0.3 };
 
 /** 프로파일 특징어가 초안에 얼마나 재현됐는가. */
 function lexiconScore(text: string, p: VoiceProfile, notes: string[]) {
@@ -117,19 +123,26 @@ function structureScore(text: string, p: VoiceProfile, notes: string[]) {
   return evScore * 0.6 + fpScore * 0.4;
 }
 
-export function scoreVoice(text: string, profile: VoiceProfile): VoiceScore {
+export function scoreVoice(
+  text: string,
+  profile: VoiceProfile,
+  genericBaseline?: GenericBaseline
+): VoiceScore {
   const notes: string[] = [];
+  const base = genericBaseline ?? { markersPer1k: 0.3 };
   const axes = {
     lexicon: Math.round(lexiconScore(text, profile, notes)),
     rhythm: Math.round(rhythmScore(text, profile, notes)),
     terminology: Math.round(terminologyScore(text, notes)),
     structure: Math.round(structureScore(text, profile, notes)),
+    generic: Math.round(genericScore(text, base, notes)),
   };
   const total = Math.round(
     axes.lexicon * WEIGHTS.lexicon +
       axes.rhythm * WEIGHTS.rhythm +
       axes.terminology * WEIGHTS.terminology +
-      axes.structure * WEIGHTS.structure
+      axes.structure * WEIGHTS.structure +
+      axes.generic * WEIGHTS.generic
   );
   return { total, axes, notes };
 }
