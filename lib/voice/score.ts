@@ -12,6 +12,7 @@
  */
 
 import { GenericBaseline, genericScore } from "./generic";
+import { TOPIC_KEYWORDS } from "./keywords";
 import {
   VoiceProfile,
   splitSentences,
@@ -108,36 +109,43 @@ function terminologyScore(text: string, notes: string[]) {
 }
 
 /**
- * 근거와 자사 언급이 실제로 들어 있는가.
+ * 근거와 주제 장악력이 들어 있는가.
  *
- * 밀도(1,000자당)로 재던 것을 절대 개수 기준으로 바꿨다. 이유:
- * 밀도는 글이 길어질수록 낮아지므로, 회사 이름을 한 번도 쓰지 않은 2,700자 글이
- * 고유 용어 5개를 쓴 1,300자 글보다 높은 점수를 받는 역전이 실제로 발생했다.
- * "우리 회사"라는 일반 표현이 자사 지칭으로 집계된 것도 같은 오류였다.
+ * 1차 설계: 자사 언급 횟수가 많을수록 좋다고 봤다 → 틀렸다.
+ * 실측: 실제 코드프레소 글 46편의 브랜드 언급 밀도는 중앙값 1.09/1,000자,
+ * p75가 2.04다. 반면 우리 생성물은 4.43이었다. 즉 우리 쪽이 오히려 과하다.
+ * 실제 글은 회사 이름을 반복하는 대신 주제 키워드로 본문을 채운다
+ * (상위 검색어 60개 중 실제 글은 중앙값 6개 포함, 우리 생성물은 5개).
  *
- * 자사 콘텐츠라면 회사·제품 이름과 근거 수치가 몇 번은 반드시 등장한다.
- * 그것을 밀도가 아니라 "있었는가, 몇 개나"로 센다.
+ * 그래서 이 축은 세 가지를 본다.
+ *   - 브랜드: 있으면 되고, 과하면 감점 (실측 분포를 상한으로)
+ *   - 제품·고유 용어: 자사만 쓸 수 있는 명사
+ *   - 주제 키워드: 실제 검색 수요어를 본문이 다루고 있는가
  */
 function structureScore(text: string, p: VoiceProfile, notes: string[]) {
-  const per1500 = 1500;
-  const scale = Math.max(text.length / per1500, 0.6); // 매우 짧은 글에 과한 요구를 하지 않는다
+  const scale = Math.max(text.length / 1500, 0.6);
+  const per1k = (n: number) => (n / Math.max(text.length, 1)) * 1000;
 
-  // 자사 지칭: 일반적인 "우리"가 아니라 회사·제품을 특정하는 표현만 센다
-  const brandHits = (text.match(/코드프레소/g) ?? []).length;
+  const brandCount = (text.match(/코드프레소/g) ?? []).length;
+  const brandDensity = per1k(brandCount);
+  // 실측 분포: 중앙값 1.09 / p75 2.04. 없으면 0점, 적정이면 만점, 과하면 감점.
+  const brandScore =
+    brandCount === 0 ? 0 : brandDensity <= 2.04 ? 100 : Math.max(40, 100 - (brandDensity - 2.04) * 20);
+
   const productHits = TERMINOLOGY.filter((t) => t !== "코드프레소" && text.includes(t)).length;
+  const productScore = Math.min(100, (productHits / Math.max(2 * scale, 1)) * 100);
 
   const evidenceHits = (text.match(/\d+(\.\d+)?\s*(%|명|건|배|개|년|개월|시간|팀|곳|회|위)/g) ?? []).length;
+  const evidenceScore = Math.min(100, (evidenceHits / Math.max(2 * scale, 1)) * 100);
 
-  // 기준: 1,500자당 브랜드 언급 2회, 제품·고유 용어 2종, 근거 수치 2회면 충분하다.
-  const ratio = (hit: number, target: number) => Math.min(1, hit / Math.max(target * scale, 1));
-  const brandScore = ratio(brandHits, 2) * 100;
-  const productScore = ratio(productHits, 2) * 100;
-  const evidenceScore = ratio(evidenceHits, 2) * 100;
+  // 주제 키워드 장악력. 실제 검색 수요어를 본문이 다루는가 (실제 글 중앙값 6개)
+  const kwHits = TOPIC_KEYWORDS.filter((k) => text.includes(k)).length;
+  const kwScore = Math.min(100, (kwHits / Math.max(5 * scale, 1)) * 100);
 
   notes.push(
-    `자사 언급 ${brandHits}회 · 고유 용어 ${productHits}종 · 근거 수치 ${evidenceHits}회`
+    `자사 언급 ${brandCount}회(${brandDensity.toFixed(1)}/1k, 자사 평균 1.1) · 고유 용어 ${productHits}종 · 주제 키워드 ${kwHits}개 · 근거 수치 ${evidenceHits}회`
   );
-  return brandScore * 0.4 + productScore * 0.3 + evidenceScore * 0.3;
+  return brandScore * 0.2 + productScore * 0.25 + kwScore * 0.3 + evidenceScore * 0.25;
 }
 
 export function scoreVoice(
