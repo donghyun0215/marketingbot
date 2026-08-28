@@ -3,6 +3,10 @@ import { analyze } from "@/lib/flywheel/analyze";
 import { Metric, Panel, AttributionBar } from "@/components/Metric";
 
 export const dynamic = "force-dynamic";
+// 승인·반려 결과는 즉시 화면에 보여야 한다. 캐시된 페이지를 재사용하면
+// 텔레그램에서 처리한 내용이 대시보드에 안 나타난다.
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 const fmt = (n: number) => n.toLocaleString("ko-KR");
 

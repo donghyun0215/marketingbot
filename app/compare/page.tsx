@@ -2,6 +2,8 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { Panel } from "@/components/Metric";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 /**
  * Baseline 비교 — 심사 제출물의 "왜 그냥 ChatGPT를 쓰지 않는가"에 답하는 화면.
