@@ -21,7 +21,7 @@ v2 변경: Red Team 리뷰 반영 — Voice Score / Fact-Guard 신설, 끊긴 �
       `performance_metrics` · `inquiries`(content_id ← Loop1) · `topic_suggestions`(outcome ← Loop4)
       `learned_constraints`(← Loop2) · `audit_log`
 - [x] 코드프레소 실데이터 임포트 완료 — 블로그 73 / 링크드인 55 / 검색어 433 / 문의 10, 합계 원본 대조 일치, 고객사명 익명화 확인 (블로그 73·검색어 433·LinkedIn 55·문의 10) + **고객사명 익명화** 처리
-- [ ] 보이스 코퍼스 확보 (수동 우선, 스크래핑은 P2)
+- [x] 보이스 코퍼스 확보 — xlsx 셀 하이퍼링크에서 URL 73개 추출 → 본문 스크래핑 72편 적재 (중앙값 3,346자 / 한글 46 · 영문 26). 큐레이션 대기
 
 ### Unit 2 — Voice Engine  [P0] ★핵심
 - [ ] 스타일 프로파일 추출 (어휘·문장 리듬·용어 통일·반복 문단 자산화)
