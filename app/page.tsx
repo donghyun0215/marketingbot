@@ -24,6 +24,14 @@ export default async function Dashboard() {
       db.from("learned_constraints").select("rule, created_at").eq("active", true).limit(5),
     ]);
 
+  // 캘린더는 별도 개체가 아니라 contents를 시간순으로 본 것이다
+  const { data: scheduled } = await db
+    .from("contents")
+    .select("id, title, scheduled_for, timing_type, channel")
+    .eq("state", "scheduled")
+    .order("scheduled_for", { ascending: true })
+    .limit(6);
+
   const rows = perf ?? [];
   const sum = (ch: string, k: "clicks" | "impressions") =>
     rows.filter((r) => r.channel === ch).reduce((a, r) => a + Number(r[k] ?? 0), 0);
@@ -174,6 +182,35 @@ export default async function Dashboard() {
           </p>
         </Panel>
       </div>
+
+      <Panel
+        title="발행 예정"
+        aside={<span className="text-[12px] text-[var(--muted)]">시각이 되면 자동 발행됩니다</span>}
+      >
+        {scheduled?.length ? (
+          <ul className="divide-y divide-[var(--line)]">
+            {scheduled.map((c) => {
+              const d = new Date(c.scheduled_for as string);
+              const wd = ["일", "월", "화", "수", "목", "금", "토"][d.getDay()];
+              const kind =
+                c.timing_type === "event" ? "행사 연동" : c.timing_type === "immediate" ? "즉시" : "기본 주기";
+              return (
+                <li key={c.id} className="flex items-center justify-between gap-4 py-2 first:pt-0">
+                  <span className="min-w-0 truncate text-[13.5px]">{c.title}</span>
+                  <span className="shrink-0 text-[12px] text-[var(--muted)]">
+                    <span className="tnum">{`${d.getMonth() + 1}.${d.getDate()}(${wd}) ${d.getHours()}시`}</span>
+                    <span className="ml-2">{kind}</span>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="text-[13px] text-[var(--muted)]">
+            예약된 콘텐츠가 없습니다. 승인 후 발행 시점을 정하면 여기에 표시됩니다.
+          </p>
+        )}
+      </Panel>
 
       <Panel title="시스템이 배운 규칙" aside={<span className="text-[12px] text-[var(--muted)]">반려 사유에서 학습</span>}>
         {rules?.length ? (

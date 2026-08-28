@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { approve, reject, publish } from "@/lib/approval";
+import { approve, reject, publish, schedule, takenSlots } from "@/lib/approval";
+import { nextDefaultSlot, describeSlot, eventPlan } from "@/lib/scheduling";
 import { answerCallback, askRejectionReason, sendMessage, callRaw, esc } from "@/lib/telegram";
 import { supabaseAdmin } from "@/lib/supabase";
 
@@ -49,11 +50,39 @@ export async function POST(req: NextRequest) {
         await approve(contentId, actor);
         await answerCallback(cq.id, "승인했습니다.");
         // 승인 다음 행동을 바로 제시한다. 발행까지 폰에서 끝난다.
+        // 승인 다음은 "언제 내보낼 것인가"다. 기본값을 제안하고 사람이 한 번에 확정한다.
+        const slot = nextDefaultSlot(new Date(), await takenSlots());
         await callRaw("sendMessage", {
           chat_id: process.env.TELEGRAM_CHAT_ID,
-          text: `✅ *\\#${contentId} 승인 완료*\n발행하면 추적 링크가 생성되고, 이 글에서 온 문의는 자동으로 귀속됩니다\\.`,
+          text:
+            `✅ *\\#${contentId} 승인 완료*\n언제 내보낼까요\\?\n` +
+            `기본 주기의 다음 빈 자리는 ${esc(describeSlot(slot))}입니다\\.`,
           parse_mode: "MarkdownV2",
-          reply_markup: { inline_keyboard: [[{ text: "🚀 발행", callback_data: `publish:${contentId}` }]] },
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: `🗓 ${describeSlot(slot)}에 예약`, callback_data: `sched:${contentId}` }],
+              [{ text: "🚀 즉시 발행", callback_data: `publish:${contentId}` }],
+              [{ text: "📌 행사 연동", callback_data: `event:${contentId}` }],
+            ],
+          },
+        });
+      } else if (action === "sched") {
+        const at = nextDefaultSlot(new Date(), await takenSlots());
+        await schedule(contentId, actor, at, "default");
+        await answerCallback(cq.id, "예약했습니다.");
+        await sendMessage(
+          `🗓 *\\#${contentId} 예약 완료* — ${esc(describeSlot(at))}\n그 시각에 자동으로 발행되고 추적 링크가 생성됩니다\\.`
+        );
+      } else if (action === "event") {
+        await answerCallback(cq.id, "행사 날짜를 입력해 주세요.");
+        await callRaw("sendMessage", {
+          chat_id: process.env.TELEGRAM_CHAT_ID,
+          text: esc(
+            `행사 날짜를 YYYY-MM-DD 로 답장해 주세요. (#${contentId})\n` +
+              `입력하면 D-30 사전 안내부터 당일 현장까지 배포 일정을 계산합니다.`
+          ),
+          parse_mode: "MarkdownV2",
+          reply_markup: { force_reply: true, input_field_placeholder: "2026-10-15" },
         });
       } else if (action === "publish") {
         const p = await publish(contentId, actor);
@@ -91,6 +120,30 @@ export async function POST(req: NextRequest) {
         );
       }
     }
+    // 3) 행사 날짜 답장
+    if (msg?.text && replyTo?.includes("행사 날짜를")) {
+      const idm = replyTo.match(/#(\d+)/);
+      const dm = msg.text.match(/(\d{4})-(\d{2})-(\d{2})/);
+      if (idm && dm && allowed(msg.from?.id)) {
+        const contentId = Number(idm[1]);
+        const anchor = new Date(`${dm[0]}T00:00:00`);
+        const plan = eventPlan(anchor);
+        if (!plan.length) {
+          await sendMessage(esc("그 날짜는 이미 지났습니다. 다시 입력해 주세요."));
+        } else {
+          // 이 콘텐츠는 첫 노드에 배치하고, 나머지 노드는 계획으로 안내한다.
+          await schedule(contentId, `telegram:${msg.from?.id}`, plan[0].at, "event", dm[0]);
+          const lines = plan
+            .map((p) => `· ${esc(describeSlot(p.at))} — ${esc(p.label)} \\(${esc(p.channel)}\\)`)
+            .join("\n");
+          await sendMessage(
+            `📌 *행사 연동 완료* \\#${contentId}\n기준일 ${esc(dm[0])}\n\n${lines}\n\n` +
+              `이 글은 첫 노드에 예약되었습니다\\. 나머지 노드는 콘텐츠가 준비되면 같은 일정에 배치됩니다\\.`
+          );
+        }
+      }
+    }
+
     return NextResponse.json({ ok: true });
   } catch (e) {
     // 실패해도 200을 준다. 에러를 반환하면 텔레그램이 같은 업데이트를 계속 재전송한다.

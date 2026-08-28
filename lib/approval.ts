@@ -105,6 +105,49 @@ export async function activeConstraints(limit = 20): Promise<string[]> {
   return (data ?? []).map((r) => r.rule as string);
 }
 
+/**
+ * 예약 발행.
+ * 승인과 발행은 다른 결정이므로 상태를 분리한다. 예약된 건은 크론이 시각을 보고 발행한다.
+ */
+export async function schedule(
+  contentId: number,
+  actor: string,
+  at: Date,
+  timingType: "default" | "event" | "immediate" = "default",
+  anchorDate?: string
+) {
+  const db = supabaseAdmin();
+  const { data, error } = await db
+    .from("contents")
+    .update({
+      state: "scheduled",
+      scheduled_for: at.toISOString(),
+      timing_type: timingType,
+      anchor_date: anchorDate ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", contentId)
+    .eq("state", "approved")
+    .select()
+    .single();
+  if (error || !data) throw new Error(`예약 실패: 승인된 상태가 아닙니다 (#${contentId})`);
+  await logDecision("contents", contentId, "scheduled", actor, {
+    scheduled_for: at.toISOString(),
+    timing_type: timingType,
+  });
+  return data;
+}
+
+/** 이미 배치된 발행 시각 목록. 같은 날 중복 배치를 피하는 데 쓴다. */
+export async function takenSlots(): Promise<Date[]> {
+  const { data } = await supabaseAdmin()
+    .from("contents")
+    .select("scheduled_for")
+    .in("state", ["scheduled", "published"])
+    .not("scheduled_for", "is", null);
+  return (data ?? []).map((r) => new Date(r.scheduled_for as string));
+}
+
 /** 발행. 루프 1(추적 링크)과 루프 3(코퍼스 편입)이 여기서 함께 닫힌다. */
 export async function publish(contentId: number, actor: string) {
   const db = supabaseAdmin();
@@ -119,10 +162,10 @@ export async function publish(contentId: number, actor: string) {
       updated_at: new Date().toISOString(),
     })
     .eq("id", contentId)
-    .eq("state", "approved")
+    .in("state", ["approved", "scheduled"]) // 즉시 발행과 예약 도달, 두 경로 모두 허용
     .select()
     .single();
-  if (error || !data) throw new Error(`발행 실패: 승인된 상태가 아닙니다 (#${contentId})`);
+  if (error || !data) throw new Error(`발행 실패: 승인 또는 예약 상태가 아닙니다 (#${contentId})`);
 
   // 루프 3: 사람이 승인한 글은 최고 품질의 학습 데이터다. 코퍼스로 돌려보낸다.
   await db.from("voice_corpus").insert({
