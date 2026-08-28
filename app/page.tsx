@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { analyze } from "@/lib/flywheel/analyze";
+import { loopMetrics } from "@/lib/flywheel/metrics";
 import { Metric, Panel, AttributionBar } from "@/components/Metric";
 import { AdoptButton, DecideButtons } from "@/components/Actions";
 
@@ -32,6 +33,7 @@ export default async function Dashboard() {
   const attributed = count("confirmed") + count("inferred");
 
   const insights = await analyze();
+  const loops = await loopMetrics();
 
   return (
     <div className="space-y-5">
@@ -121,6 +123,55 @@ export default async function Dashboard() {
               </li>
             ))}
           </ul>
+        </Panel>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Panel title="콘텐츠가 문의를 만들었는가" aside={<span className="text-[12px] text-[var(--muted)]">루프 1</span>}>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded border border-[var(--line)] px-3 py-2">
+              <div className="text-[11.5px] text-[var(--muted)]">과거 방식 (추적 없음)</div>
+              <div className="tnum mt-0.5 text-[20px] font-semibold text-[var(--risk)]">{loops.attribution.legacyRate}%</div>
+              <div className="mt-0.5 text-[11.5px] text-[var(--muted)]">
+                {loops.attribution.legacyTotal}건 중 {loops.attribution.legacyAttributed}건만 출처 파악
+              </div>
+            </div>
+            <div className="rounded border border-[var(--line)] px-3 py-2">
+              <div className="text-[11.5px] text-[var(--muted)]">이 시스템 발행분</div>
+              <div className="tnum mt-0.5 text-[20px] font-semibold text-[var(--ok)]">
+                {loops.attribution.systemRate === null ? "—" : `${loops.attribution.systemRate}%`}
+              </div>
+              <div className="mt-0.5 text-[11.5px] text-[var(--muted)]">
+                {loops.attribution.systemTotal === 0
+                  ? "아직 추적 링크로 들어온 문의가 없습니다"
+                  : `${loops.attribution.systemTotal}건 전부 귀속`}
+              </div>
+            </div>
+          </div>
+        </Panel>
+
+        <Panel title="추천이 성과로 이어졌는가" aside={<span className="text-[12px] text-[var(--muted)]">루프 4</span>}>
+          <div className="flex items-center gap-2 text-[12.5px]">
+            {[
+              ["제안", loops.suggestions.proposed],
+              ["채택", loops.suggestions.accepted],
+              ["발행", loops.suggestions.published],
+              ["문의 발생", loops.suggestions.ledToInquiry],
+            ].map(([label, n], i, arr) => (
+              <div key={String(label)} className="flex items-center gap-2">
+                <div className="rounded border border-[var(--line)] px-2.5 py-1.5 text-center">
+                  <div className="text-[11px] text-[var(--muted)]">{label}</div>
+                  <div className="tnum text-[16px] font-semibold">{n as number}</div>
+                </div>
+                {i < arr.length - 1 && <span className="text-[var(--muted)]">→</span>}
+              </div>
+            ))}
+          </div>
+          <p className="mt-2.5 text-[12px] text-[var(--muted)]">
+            {loops.suggestions.hitRate === null
+              ? "추천에서 나온 콘텐츠가 아직 발행되지 않았습니다. 발행 후 적중률이 계산됩니다."
+              : `발행된 추천 중 ${loops.suggestions.hitRate}%가 문의로 이어졌습니다.`}
+          </p>
         </Panel>
       </div>
 
