@@ -1,5 +1,5 @@
 # Level 1 Plan v2 — marketingbot
-상태: **승인 대기 (Product Owner: Donghyun)**
+상태: **승인됨 (2026-08-29) — Construction Phase 진행 중**
 v2 변경: Red Team 리뷰 반영 — Voice Score / Fact-Guard 신설, 끊긴 루프 4곳 폐쇄, P0/P1/P2 우선순위 부여
 (근거: `aidlc-docs/design-artifacts/red-team-review.md`)
 
@@ -14,13 +14,13 @@ v2 변경: Red Team 리뷰 반영 — Voice Score / Fact-Guard 신설, 끊긴 �
 
 ## Units
 
-### Unit 1 — Foundation  [P0]
-- [ ] Next.js 스캐폴드 (App Router, TS, Tailwind) + Vercel 배포
-- [ ] Supabase 스키마:
+### Unit 1 — Foundation  [P0]  ◀ Bolt 1 진행 중
+- [x] Next.js 스캐폴드 (App Router, TS, Tailwind) — Vercel 배포는 env 등록 후
+- [x] Supabase 스키마 작성 (`supabase/migrations/0001_init.sql`) — SQL Editor 실행 대기:
       `voice_corpus`(source: scraped|approved) · `contents`(state: draft→fact_check→pending_approval→approved→published, suggestion_id, tracking_id)
       `performance_metrics` · `inquiries`(content_id ← Loop1) · `topic_suggestions`(outcome ← Loop4)
       `learned_constraints`(← Loop2) · `audit_log`
-- [ ] 코드프레소 실데이터 임포트 (블로그 73·검색어 433·LinkedIn 55·문의 10) + **고객사명 익명화** 처리
+- [~] 코드프레소 실데이터 임포트 스크립트 완성·파싱 검증(73/55/433/10) — 테이블 생성 후 실행 (블로그 73·검색어 433·LinkedIn 55·문의 10) + **고객사명 익명화** 처리
 - [ ] 보이스 코퍼스 확보 (수동 우선, 스크래핑은 P2)
 
 ### Unit 2 — Voice Engine  [P0] ★핵심
