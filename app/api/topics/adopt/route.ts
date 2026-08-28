@@ -117,7 +117,29 @@ export async function POST(req: NextRequest) {
     });
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
-    // 429는 실패가 아니라 "잠시 후 다시"에 가깝다. 그렇게 안내한다.
+    // 생성이 실패했는데 주제가 accepted로 잠겨 있으면 재시도할 수 없다. 되돌린다.
+    try {
+      const { suggestionId } = await req.clone().json();
+      if (suggestionId) {
+        await supabaseAdmin()
+          .from("topic_suggestions")
+          .update({ status: "proposed", decided_at: null, decided_by: null })
+          .eq("id", suggestionId)
+          .eq("status", "accepted");
+      }
+    } catch {
+      /* 되돌리기 실패는 원래 오류를 덮지 않는다 */
+    }
+    if (/DAILY_QUOTA_EXCEEDED/.test(detail)) {
+      return NextResponse.json(
+        {
+          error:
+            "무료 API의 일일 한도를 모두 사용했습니다. 내일 초기화되며, 즉시 이어가려면 다른 제공자(LLM_PROVIDER)로 전환하세요.",
+        },
+        { status: 429 }
+      );
+    }
+    // 분당 한도는 실패가 아니라 "잠시 후 다시"에 가깝다.
     if (/429|quota|rate/i.test(detail)) {
       return NextResponse.json(
         { error: "무료 API 분당 한도에 걸렸습니다. 30초쯤 뒤에 다시 시도해 주세요." },

@@ -133,10 +133,15 @@ export async function generate(a: GenerateArgs, retries = 4): Promise<string> {
     } catch (e) {
       lastError = e;
       const msg = String(e);
+      // 일일 한도는 기다려도 풀리지 않는다. 재시도하면 함수 타임아웃만 부르고,
+      // 그러면 서버가 HTML 에러를 반환해 화면에는 JSON 파싱 오류로 보인다(실제로 겪음).
+      // 분당 한도와 구분해서, 일일 한도면 즉시 포기하고 원인을 그대로 알린다.
+      const perDay = /PerDay|per day|daily/i.test(msg);
+      if (perDay) throw new Error("DAILY_QUOTA_EXCEEDED");
       const rateLimited = /429|quota|rate/i.test(msg);
       const retriable = rateLimited || /5\d\d/.test(msg);
       if (!retriable || i === retries) break;
-      // 분당 한도는 초 단위로 풀린다. 429면 더 길게 기다린다.
+      // 분당 한도는 초 단위로 풀린다.
       const waitMs = rateLimited ? 8000 * (i + 1) : 1500 * (i + 1);
       await new Promise((r) => setTimeout(r, waitMs));
     }
