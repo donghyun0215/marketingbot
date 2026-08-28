@@ -109,4 +109,9 @@ export async function askRejectionReason(contentId: number) {
   });
 }
 
+/** 임의 파라미터로 메시지를 보낼 때 (버튼 포함 등) */
+export async function callRaw(method: string, body: unknown) {
+  return call(method, body);
+}
+
 export { esc };

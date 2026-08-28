@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { approve, reject } from "@/lib/approval";
-import { answerCallback, askRejectionReason, sendMessage, esc } from "@/lib/telegram";
+import { approve, reject, publish } from "@/lib/approval";
+import { answerCallback, askRejectionReason, sendMessage, callRaw, esc } from "@/lib/telegram";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -48,7 +48,20 @@ export async function POST(req: NextRequest) {
       if (action === "approve") {
         await approve(contentId, actor);
         await answerCallback(cq.id, "승인했습니다.");
-        await sendMessage(`✅ *\\#${contentId} 승인 완료* — 발행 대기열로 이동했습니다\\.`);
+        // 승인 다음 행동을 바로 제시한다. 발행까지 폰에서 끝난다.
+        await callRaw("sendMessage", {
+          chat_id: process.env.TELEGRAM_CHAT_ID,
+          text: `✅ *\\#${contentId} 승인 완료*\n발행하면 추적 링크가 생성되고, 이 글에서 온 문의는 자동으로 귀속됩니다\\.`,
+          parse_mode: "MarkdownV2",
+          reply_markup: { inline_keyboard: [[{ text: "🚀 발행", callback_data: `publish:${contentId}` }]] },
+        });
+      } else if (action === "publish") {
+        const p = await publish(contentId, actor);
+        await answerCallback(cq.id, "발행했습니다.");
+        const link = `${req.nextUrl.origin}/r/${p.tracking_id}`;
+        await sendMessage(
+          `🚀 *\\#${contentId} 발행 완료*\n추적 링크: ${esc(link)}\n이 링크를 거친 문의는 이 글에 귀속됩니다\\.`
+        );
       } else if (action === "reject") {
         // 사유를 받아야 반려가 완료된다. 사유 없는 반려는 만들지 않는다.
         await answerCallback(cq.id, "반려 사유를 입력해 주세요.");
