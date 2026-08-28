@@ -80,7 +80,6 @@ async function callGemini(a: GenerateArgs): Promise<string> {
  */
 let groqModelCache: string | null = null;
 async function resolveGroqModel(key: string): Promise<string> {
-  if (process.env.GROQ_MODEL) return process.env.GROQ_MODEL;
   if (groqModelCache) return groqModelCache;
   try {
     const res = await fetch("https://api.groq.com/openai/v1/models", {
@@ -88,6 +87,16 @@ async function resolveGroqModel(key: string): Promise<string> {
     });
     const data = await res.json();
     const ids: string[] = (data?.data ?? []).map((m: any) => m.id);
+
+    // 설정된 모델명은 "존재할 때만" 신뢰한다.
+    // 환경변수를 무조건 따르면 오타나 폐기된 이름 하나로 서비스가 죽는다.
+    // 실제로 겪은 두 경우: llama-3.3-70b-versatile 폐기, 그리고 복사 중 앞글자가
+    // 잘린 penai/gpt-oss-120b. 둘 다 404였고 원인은 제공자가 아니라 설정이었다.
+    const pinned = process.env.GROQ_MODEL?.trim();
+    if (pinned && ids.includes(pinned)) {
+      groqModelCache = pinned;
+      return groqModelCache;
+    }
     // 한국어 실측 결과 순서. qwen 계열은 본문에 중국어가 섞여 나와 제외한다.
     // (테스트: "Integration 비용과 시간을预估 할 수 있습니다")
     const rank = [/gpt-oss-120b/i, /gpt-oss/i, /llama.*70b/i, /llama/i, /compound(?!-mini)/i];
