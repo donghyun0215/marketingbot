@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #16202c;
+  --muted: #6b7a8d;
+  --line: #e3e8ef;
+  --surface: #ffffff;
+  --canvas: #f6f8fa;
+  --brand: #1f5fd6;      /* 판단·시스템 */
+  --warn: #e8833a;       /* 확인 필요 */
+  --risk: #d64545;       /* 차단 */
+  --ok: #1f9d6b;         /* 통과 */
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo",
+    "Malgun Gothic", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 수치는 표처럼 줄이 맞아야 읽힌다 */
+.tnum { font-variant-numeric: tabular-nums; }
