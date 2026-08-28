@@ -117,6 +117,13 @@ export async function POST(req: NextRequest) {
     });
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
+    // 429는 실패가 아니라 "잠시 후 다시"에 가깝다. 그렇게 안내한다.
+    if (/429|quota|rate/i.test(detail)) {
+      return NextResponse.json(
+        { error: "무료 API 분당 한도에 걸렸습니다. 30초쯤 뒤에 다시 시도해 주세요." },
+        { status: 429 }
+      );
+    }
     return NextResponse.json({ error: detail }, { status: 500 });
   }
 }

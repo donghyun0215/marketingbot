@@ -117,8 +117,13 @@ async function callAnthropic(a: GenerateArgs): Promise<string> {
   return (data?.content ?? []).map((c: any) => c.text ?? "").join("");
 }
 
-/** 재시도: 무료 티어는 분당 요청 제한에 걸리기 쉬우므로 백오프를 둔다. */
-export async function generate(a: GenerateArgs, retries = 2): Promise<string> {
+/**
+ * 재시도.
+ * 무료 티어는 분당 요청 한도가 빡빡하다. 한 번 채택할 때 생성이 두 번 일어나므로
+ * 429가 흔하게 발생하고, 1~2초 백오프로는 부족하다(실제로 겪음).
+ * 429는 시간이 지나면 반드시 풀리는 오류이므로 길게, 여러 번 기다린다.
+ */
+export async function generate(a: GenerateArgs, retries = 4): Promise<string> {
   const fn =
     provider() === "gemini" ? callGemini : provider() === "groq" ? callGroq : callAnthropic;
   let lastError: unknown;
@@ -128,9 +133,12 @@ export async function generate(a: GenerateArgs, retries = 2): Promise<string> {
     } catch (e) {
       lastError = e;
       const msg = String(e);
-      const retriable = /429|5\d\d|rate/i.test(msg);
+      const rateLimited = /429|quota|rate/i.test(msg);
+      const retriable = rateLimited || /5\d\d/.test(msg);
       if (!retriable || i === retries) break;
-      await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
+      // 분당 한도는 초 단위로 풀린다. 429면 더 길게 기다린다.
+      const waitMs = rateLimited ? 8000 * (i + 1) : 1500 * (i + 1);
+      await new Promise((r) => setTimeout(r, waitMs));
     }
   }
   throw lastError;
