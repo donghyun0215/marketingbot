@@ -163,8 +163,9 @@ export function profileToInstructions(p: VoiceProfile): string {
     `문장 길이는 평균 ${p.sentence.mean}자, 대부분 ${p.sentence.p25}~${p.sentence.p75}자 사이에 둔다.`,
     `문단은 평균 ${p.paragraph.meanSentences}문장으로 끊는다.`,
     `종결 어미 비율: ${topEndings}.`,
-    `1,000자당 자사 지칭(우리/코드프레소)을 약 ${p.firstPersonDensity}회 쓴다.`,
-    `1,000자당 수치·사례를 약 ${p.evidenceDensity}회 인용한다. 근거 없는 형용사보다 숫자를 쓴다.`,
+    `자사 지칭(우리/코드프레소)은 1,500자 기준 ${Math.round(p.firstPersonDensity * 1.5)}회 정도가 자연스럽다.`,
+    `수치·사례 인용은 1,500자 기준 ${Math.max(2, Math.round(p.evidenceDensity * 1.5))}회 정도. 그 이상 넣으면 오히려 어색하다.`,
+    `근거 없는 형용사보다 구체적 사실을 쓰되, 숫자로 도배하지 않는다.`,
     `고유 용어는 다음 표기를 정확히 지킨다: ${p.terminology.join(", ")}.`,
     `자주 쓰는 표현: ${p.lexicon.slice(0, 25).join(", ")}.`,
   ].join("\n");

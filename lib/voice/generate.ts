@@ -44,7 +44,8 @@ export function voicedPrompt(input: GenerateInput, profile: VoiceProfile): strin
   if (input.evidence?.length) {
     sections.push(
       ``,
-      `[근거 — 아래 사실만 인용하고, 여기 없는 수치는 지어내지 않는다]`,
+      `[근거 — 아래 사실만 인용한다. 여기 없는 수치는 지어내지 않는다.`,
+      ` 수치는 글 전체에서 2~3회만 쓴다. 숫자를 나열하지 말고 문장 안에 녹인다.]`,
       ...input.evidence.map((e) => `- ${e}`)
     );
   }
@@ -64,6 +65,10 @@ export function voicedPrompt(input: GenerateInput, profile: VoiceProfile): strin
     `- 근거 없는 최상급 표현("최고의", "혁신적인")을 쓰지 않는다.`,
     `- 어느 회사에나 해당되는 일반론으로 채우지 않는다. 코드프레소만 할 수 있는 이야기를 쓴다.`,
     ``,
+    `[분량 — 반드시 지킨다]`,
+    `공백 포함 1,400자 이상 1,800자 이하. 소제목 2~3개로 나눠 충분히 전개한다.`,
+    `짧게 요약하지 말고, 각 소제목마다 사례나 설명을 3~4문장씩 붙인다.`,
+    ``,
     `본문만 출력한다. 머리말이나 설명은 붙이지 않는다.`
   );
 
@@ -77,12 +82,19 @@ export async function generateDraft(
   profile: VoiceProfile
 ): Promise<DraftResult> {
   // 순차 호출: 무료 티어의 분당 요청 제한을 피한다.
-  const baseline = await generate({ prompt: baselinePrompt(input), maxTokens: 2048 });
-  const voiced = await generate({
-    system: SYSTEM,
-    prompt: voicedPrompt(input, profile),
-    maxTokens: 2048,
-  });
+  const baseline = await generate({ prompt: baselinePrompt(input), maxTokens: 16384 });
+  // 분량 미달은 수치 밀도를 왜곡시켜 채점을 망친다. 한 번 더 요청한다.
+  let voiced = "";
+  for (let attempt = 0; attempt < 2; attempt++) {
+    voiced = await generate({
+      system: SYSTEM,
+      prompt:
+        voicedPrompt(input, profile) +
+        (attempt > 0 ? `\n\n직전 시도가 너무 짧았다. 반드시 1,400자 이상으로 쓴다.` : ""),
+      maxTokens: 16384,
+    });
+    if (voiced.length >= 1200) break;
+  }
 
   return {
     model: modelName(),

@@ -82,8 +82,9 @@ function terminologyScore(text: string, notes: string[]) {
     [/코드 프레소|코드프래소|CodePresso(?!\w)/g, "코드프레소"],
     [/AI역량진단|AI 역량진단/g, "AI 역량 진단"],
     [/에이아이 전환|AI전환/g, "AI 전환"],
-    [/Skill Certify|skillcertify/gi, "SkillCertify"],
-    [/Dev Talk|devtalk(?!\w)/gi, "Devtalk"],
+    // 대소문자 무시로 검사하면 올바른 표기까지 잡힌다. 잘못된 변형만 정확히 지정한다.
+    [/Skill\s+Certify|skillcertify|SKILLCERTIFY/g, "SkillCertify"],
+    [/Dev\s+Talk|devtalk|DEVTALK|DevTalk/g, "Devtalk"],
   ];
   for (const [re, correct] of variants) {
     const m = text.match(re);

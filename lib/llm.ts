@@ -31,7 +31,7 @@ function provider(): LlmProvider {
 export function modelName(): string {
   switch (provider()) {
     case "gemini":
-      return process.env.GEMINI_MODEL ?? "gemini-2.0-flash";
+      return process.env.GEMINI_MODEL ?? "gemini-3.6-flash";
     case "groq":
       return process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile";
     case "anthropic":
@@ -52,15 +52,23 @@ async function callGemini(a: GenerateArgs): Promise<string> {
         systemInstruction: a.system ? { parts: [{ text: a.system }] } : undefined,
         contents: [{ role: "user", parts: [{ text: a.prompt }] }],
         generationConfig: {
-          maxOutputTokens: a.maxTokens ?? 2048,
+          maxOutputTokens: a.maxTokens ?? 16384,
           temperature: a.temperature ?? 0.7,
+          // thinking 토큰은 maxOutputTokens 예산을 함께 소비한다(usageMetadata의
+          // thoughtsTokenCount로 확인). 예산이 빠듯하면 본문이 몇 백 자로 잘리거나
+          // 사고 과정이 그대로 출력된다 — 둘 다 실제로 겪었다. 그래서 넉넉히 준다.
+          thinkingConfig: { includeThoughts: false },
         },
       }),
     }
   );
   if (!res.ok) throw new Error(`Gemini ${res.status}: ${(await res.text()).slice(0, 300)}`);
   const data = await res.json();
-  const text = data?.candidates?.[0]?.content?.parts?.map((p: any) => p.text ?? "").join("") ?? "";
+  const parts = data?.candidates?.[0]?.content?.parts ?? [];
+  const text = parts
+    .filter((p: any) => !p.thought)          // 사고 블록은 본문이 아니다
+    .map((p: any) => p.text ?? "")
+    .join("");
   if (!text) throw new Error("Gemini returned empty content");
   return text;
 }
