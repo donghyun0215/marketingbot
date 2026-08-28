@@ -122,7 +122,11 @@ async function callGroq(a: GenerateArgs): Promise<string> {
         ...(a.system ? [{ role: "system", content: a.system }] : []),
         { role: "user", content: a.prompt },
       ],
-      max_tokens: a.maxTokens ?? 2048,
+      // 제공자마다 예산의 의미가 다르다.
+      // Gemini는 thinking 토큰이 출력 예산을 함께 먹어 크게 잡아야 하지만,
+      // Groq 무료 티어는 분당 8,000 토큰이라 같은 값을 쓰면 요청 자체가 거부된다(413).
+      // 여기서는 실제 본문 길이에 맞춘 값만 쓴다.
+      max_tokens: Math.min(a.maxTokens ?? 2048, 3000),
       temperature: a.temperature ?? 0.7,
     }),
   });
@@ -175,7 +179,7 @@ export async function generate(a: GenerateArgs, retries = 4): Promise<string> {
       // 분당 한도와 구분해서, 일일 한도면 즉시 포기하고 원인을 그대로 알린다.
       const perDay = /PerDay|per day|daily/i.test(msg);
       if (perDay) throw new Error("DAILY_QUOTA_EXCEEDED");
-      const rateLimited = /429|quota|rate/i.test(msg);
+      const rateLimited = /429|413|quota|rate|tokens per minute|TPM/i.test(msg);
       const retriable = rateLimited || /5\d\d/.test(msg);
       if (!retriable || i === retries) break;
       // 분당 한도는 초 단위로 풀린다.
