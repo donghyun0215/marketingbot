@@ -295,44 +295,43 @@ function card(slide, { x, y, w, h, fill = WHITE, line = LINE }) {
   titled(s, "검증", "점수 채택 기준",
     "이 점수는 저희가 정한 이상적인 글이 아니라, 코드프레소가 실제 발행한 글 46편에서 역산한 기준입니다");
 
+  // 기준값은 한 줄로 압축한다. 발표에서 읽지 않고 눈으로 확인만 시킨다.
+  card(s, { x: M, y: 2.15, w: W - M * 2, h: 0.95 });
   const basis = [
     ["문장 평균 길이", "46.9자"],
     ["어미 전환률 중앙값", "10.4%"],
     ["브랜드 언급", "1.09회 / 1,000자"],
     ["수치 인용", "1.26회 / 1,000자"],
   ];
-  s.addText("기준값은 전부 그 46편의 실측값입니다", {
-    x: M, y: 2.15, w: 6, h: 0.3, isTextBox: true, margin: 0,
-    fontFace: H, fontSize: 14, bold: true, color: INK });
-  basis.forEach((b, i) => {
-    const y = 2.58 + i * 0.72;
-    card(s, { x: M, y, w: 5.6, h: 0.6 });
-    s.addText(b[0], { x: M + 0.28, y: y + 0.16, w: 3.4, h: 0.28, isTextBox: true, margin: 0,
-      fontFace: B, fontSize: 12.5, color: MUTED });
-    s.addText(b[1], { x: M + 3.6, y: y + 0.14, w: 1.8, h: 0.3, isTextBox: true, margin: 0,
-      fontFace: H, fontSize: 13.5, bold: true, color: INK, align: "right" });
+  basis.forEach((bs, i) => {
+    const x = M + 0.35 + i * 2.85;
+    s.addText(bs[0], { x, y: 2.36, w: 2.6, h: 0.24, isTextBox: true, margin: 0,
+      fontFace: B, fontSize: 11, color: MUTED });
+    s.addText(bs[1], { x, y: 2.62, w: 2.6, h: 0.3, isTextBox: true, margin: 0,
+      fontFace: H, fontSize: 15, bold: true, color: INK });
   });
 
-  card(s, { x: M + 5.95, y: 2.58, w: 5.6, h: 2.02, line: BLUE });
+  // 관문이 이 장의 주인공이다
+  card(s, { x: M, y: 3.35, w: W - M * 2, h: 1.7, line: BLUE });
   s.addText("기준을 고칠 때마다 통과해야 하는 관문", {
-    x: M + 6.25, y: 2.8, w: 5.0, h: 0.3, isTextBox: true, margin: 0,
-    fontFace: H, fontSize: 14, bold: true, color: BLUE });
+    x: M + 0.45, y: 3.6, w: 8, h: 0.34, isTextBox: true, margin: 0,
+    fontFace: H, fontSize: 19, bold: true, color: BLUE });
   s.addText(
-    "수정한 채점 기준으로 그 46편을 다시 채점해 중앙값 92점이 유지되어야 채택하고, 그러지 못하면 폐기합니다.\n\n" +
-    "실제로 네 차례 폐기하거나 고쳤습니다. 저희 결과에 유리하도록 맞춘 지표가 아니라, 고객사의 글로 검증한 지표라는 뜻입니다.",
-    { x: M + 6.25, y: 3.2, w: 5.0, h: 1.3, isTextBox: true, margin: 0,
-      fontFace: B, fontSize: 12, color: "38445A", lineSpacing: 17 });
+    "수정한 채점 기준으로 그 46편을 다시 채점해 중앙값 92점이 유지되어야 채택하고, 그러지 못하면 폐기합니다.\n" +
+    "실제로 네 차례 폐기하거나 고쳤습니다. 저희 결과에 유리하도록 맞춘 지표가 아니라, 고객사의 글로 검증한 지표입니다.",
+    { x: M + 0.45, y: 4.05, w: 10.8, h: 0.85, isTextBox: true, margin: 0,
+      fontFace: B, fontSize: 14, color: "38445A", lineSpacing: 22 });
 
-  card(s, { x: M + 5.95, y: 4.78, w: 5.6, h: 1.6 });
+  card(s, { x: M, y: 5.3, w: W - M * 2, h: 1.25 });
   s.addText("폐기한 지표의 예", {
-    x: M + 6.25, y: 4.96, w: 5.0, h: 0.28, isTextBox: true, margin: 0,
-    fontFace: H, fontSize: 13, bold: true, color: INK });
+    x: M + 0.45, y: 5.5, w: 5, h: 0.28, isTextBox: true, margin: 0,
+    fontFace: H, fontSize: 13.5, bold: true, color: INK });
   s.addText(
     "\u201C자사 글은 굵은 글씨를 쓰지 않는다\u201D는 신호로 30점 차이를 만들었지만, 원본을 다시 확인하니 실제로는 1,000자당 9.73회 사용하고 있었습니다. 저희 수집 과정이 만든 착시였고, 그 신호는 폐기했습니다.",
-    { x: M + 6.25, y: 5.3, w: 5.0, h: 1.0, isTextBox: true, margin: 0,
-      fontFace: B, fontSize: 11.5, color: MUTED, lineSpacing: 16 });
+    { x: M + 0.45, y: 5.84, w: 10.8, h: 0.6, isTextBox: true, margin: 0,
+      fontFace: B, fontSize: 12.5, color: MUTED, lineSpacing: 18 });
 
-  s.addNotes("35초. 왼쪽은 훑고, 오른쪽 상단 관문만 또박또박 말합니다. 폐기 사례는 시간이 없으면 생략하고 질문 때 씁니다.");
+  s.addNotes("20초. 상단 기준값은 읽지 않고 관문 한 문장만 말합니다. 폐기 사례는 Q&A용입니다.");
 }
 
 /* ─────────── 8. 믿을 수 있는 근거 ─────────── */
@@ -389,14 +388,10 @@ function card(slide, { x, y, w, h, fill = WHITE, line = LINE }) {
       fontFace: B, fontSize: 13.5, color: INK });
   });
 
-  card(s, { x: M, y: 5.5, w: W - M * 2, h: 1.1, fill: WHITE, line: BLUE });
-  s.addText("내일부터 쓰려면 필요한 것", {
-    x: M + 0.4, y: 5.68, w: 5, h: 0.3, isTextBox: true, margin: 0,
-    fontFace: H, fontSize: 14, bold: true, color: BLUE });
-  s.addText("문의 폼에 유입 경로 파라미터 한 줄 · 승인자 계정 등록 · 링크드인 토큰 연결 — 스키마와 되먹임 구조는 그대로 갑니다.", {
-    x: M + 0.4, y: 6.02, w: 10.8, h: 0.4, isTextBox: true, margin: 0,
-    fontFace: B, fontSize: 12.5, color: "38445A" });
-  s.addNotes("20초. 하지 않은 것을 먼저 말하고 도입 조건으로 닫습니다.");
+  s.addText("링크드인 실제 발행만 못 했습니다. 조직 페이지 발행에는 별도 승인이 필요한데, 저희가 받은 실데이터의 출처가 바로 그 API입니다 — 코드프레소는 이미 권한을 갖고 있습니다.", {
+    x: M, y: 5.6, w: 11.4, h: 0.6, isTextBox: true, margin: 0,
+    fontFace: B, fontSize: 13, color: "38445A", lineSpacing: 20 });
+  s.addNotes("15초. 하지 않은 것을 먼저 말하고 링크드인 사유 한 줄로 닫습니다.");
 }
 
 /* ─────────── 10. 마무리 ─────────── */
@@ -410,9 +405,12 @@ function card(slide, { x, y, w, h, fill = WHITE, line = LINE }) {
     x: M, y: 3.85, w: 11, h: 0.45, isTextBox: true, margin: 0,
     fontFace: B, fontSize: 17, color: "C7D4EA" });
   s.addShape(pres.ShapeType.rect, { x: M, y: 4.6, w: 1.1, h: 0.035, fill: { color: BLUE }, line: { width: 0 } });
+  s.addText("도입에 필요한 것 — 문의 폼에 유입 경로 파라미터 한 줄, 승인자 계정 등록, 링크드인 토큰 연결", {
+    x: M, y: 4.82, w: 11, h: 0.3, isTextBox: true, margin: 0,
+    fontFace: B, fontSize: 13.5, color: "8FA3C4" });
   s.addText("marketingbot.vercel.app", {
-    x: M, y: 4.82, w: 8, h: 0.3, isTextBox: true, margin: 0,
-    fontFace: B, fontSize: 13, color: "8FA3C4" });
+    x: M, y: 5.2, w: 8, h: 0.3, isTextBox: true, margin: 0,
+    fontFace: B, fontSize: 12.5, color: "6B7F9E" });
   s.addNotes("Q&A로 넘어갑니다.");
 }
 
