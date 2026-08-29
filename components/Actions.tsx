@@ -51,13 +51,13 @@ export function AdoptButton({ suggestionId }: { suggestionId: number }) {
         <button
           onClick={run}
           disabled={state === "working" || state === "done"}
-          className="rounded border border-[var(--line)] px-2.5 py-1 text-[12px] hover:bg-[var(--canvas)] disabled:opacity-45"
+          className="rounded-md border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-[12px] font-medium shadow-[var(--shadow-1)] hover:bg-[var(--surface-2)] disabled:opacity-45"
         >
-          {state === "working" ? "초안 생성 중…" : state === "done" ? "승인 요청 완료" : "채택하고 초안 생성"}
+          {state === "working" ? "초안 생성 중…" : state === "done" ? "승인 요청 보냄" : "채택하고 초안 생성"}
         </button>
         <button
           disabled={state === "working"}
-          className="rounded border border-[var(--line)] px-2.5 py-1 text-[12px] text-[var(--muted)] hover:bg-[var(--canvas)]"
+          className="rounded-md border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-[12px] text-[var(--muted)] hover:bg-[var(--surface-2)]"
         >
           보류
         </button>
@@ -107,14 +107,14 @@ export function DecideButtons({ contentId }: { contentId: number }) {
       <button
         onClick={() => decide("approve")}
         disabled={state === "working" || state === "done"}
-        className="rounded border border-[var(--line)] px-2.5 py-1 text-[12px] hover:bg-[var(--canvas)] disabled:opacity-45"
+        className="rounded-md border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-[12px] font-medium shadow-[var(--shadow-1)] hover:bg-[var(--surface-2)] disabled:opacity-45"
       >
         승인
       </button>
       <button
         onClick={() => decide("reject")}
         disabled={state === "working" || state === "done"}
-        className="rounded border border-[var(--line)] px-2.5 py-1 text-[12px] hover:bg-[var(--canvas)] disabled:opacity-45"
+        className="rounded-md border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-[12px] font-medium shadow-[var(--shadow-1)] hover:bg-[var(--surface-2)] disabled:opacity-45"
       >
         반려
       </button>

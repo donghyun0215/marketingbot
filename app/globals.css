@@ -2,25 +2,86 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * 디자인 방향: 결정을 내리는 콘솔.
+ * 분석 대시보드가 아니라 "승인할 것 / 고를 것"을 빠르게 처리하는 화면이므로,
+ * 화면의 중심은 차트가 아니라 결정 대기 항목이다.
+ * 한국어가 주 언어라 Pretendard를 본문에 쓴다. 숫자는 표처럼 정렬되어야 읽힌다.
+ */
 :root {
-  --ink: #16202c;
-  --muted: #6b7a8d;
-  --line: #e3e8ef;
+  --canvas: #f5f6f8;
   --surface: #ffffff;
-  --canvas: #f6f8fa;
-  --brand: #1f5fd6;      /* 판단·시스템 */
-  --warn: #e8833a;       /* 확인 필요 */
-  --risk: #d64545;       /* 차단 */
-  --ok: #1f9d6b;         /* 통과 */
+  --surface-2: #fafbfc;
+  --ink: #0b1220;
+  --ink-2: #38445a;
+  --muted: #6e7a8a;
+  --line: #e6e9ef;
+  --line-2: #f0f2f6;
+
+  --accent: #2b5ce6;      /* 시스템이 제안하는 것 */
+  --amber: #c8791a;       /* 사람이 확인할 것 */
+  --danger: #c43d3d;      /* 막힌 것 */
+  --ok: #1e8e63;          /* 통과한 것 */
+
+  --r: 10px;
+  --shadow-1: 0 1px 2px rgba(11, 18, 32, 0.04), 0 1px 1px rgba(11, 18, 32, 0.03);
+  --shadow-2: 0 4px 16px rgba(11, 18, 32, 0.07), 0 1px 2px rgba(11, 18, 32, 0.04);
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   background: var(--canvas);
   color: var(--ink);
-  font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo",
-    "Malgun Gothic", sans-serif;
-  -webkit-font-smoothing: antialiased;
+  font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", system-ui,
+    sans-serif;
+  font-feature-settings: "ss01", "tnum";
+  letter-spacing: -0.011em;
 }
 
-/* 수치는 표처럼 줄이 맞아야 읽힌다 */
-.tnum { font-variant-numeric: tabular-nums; }
+/* 수치는 자리수가 흔들리면 비교가 안 된다 */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* 카드가 한꺼번에 튀어나오면 산만하다. 순서대로 아주 조금씩 올라오게 한다. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 키보드 사용자가 어디 있는지 항상 보이게 */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+button {
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+}
+button:active:not(:disabled) {
+  transform: translateY(0.5px);
+}

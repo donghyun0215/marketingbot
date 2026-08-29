@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
-import { Panel } from "@/components/Metric";
+import { Panel, ScoreBar } from "@/components/Metric";
 import { buildProfile, CorpusDoc } from "@/lib/voice/profile";
 import { buildGenericBaseline } from "@/lib/voice/generic";
 import { scoreVoice } from "@/lib/voice/score";
@@ -54,7 +54,7 @@ export default async function Compare() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-[19px] font-semibold tracking-tight">같은 모델, 같은 주제, 다른 시스템</h1>
+        <h1 className="text-[21px] font-semibold tracking-[-0.02em]">같은 모델, 같은 주제, 다른 시스템</h1>
         <p className="mt-0.5 text-[13px] text-[var(--muted)]">
           모델을 바꾸지 않았습니다. 달라진 것은 코퍼스에서 뽑은 문체, 반려에서 배운 규칙, 실데이터 근거뿐입니다.
         </p>
@@ -69,7 +69,7 @@ export default async function Compare() {
             </span>
           }
         >
-          <pre className="whitespace-pre-wrap text-[12.5px] leading-relaxed text-[var(--muted)]">
+          <pre className="max-h-[420px] overflow-y-auto whitespace-pre-wrap font-[inherit] text-[12.5px] leading-relaxed text-[var(--muted)]">
             {c.baseline_body}
           </pre>
         </Panel>
@@ -81,7 +81,9 @@ export default async function Compare() {
             </span>
           }
         >
-          <pre className="whitespace-pre-wrap text-[12.5px] leading-relaxed">{c.body}</pre>
+          <pre className="max-h-[420px] overflow-y-auto whitespace-pre-wrap font-[inherit] text-[12.5px] leading-relaxed">
+            {c.body}
+          </pre>
         </Panel>
       </div>
 
@@ -89,28 +91,19 @@ export default async function Compare() {
         title="무엇이 달랐는가"
         aside={<span className="text-[12px] text-[var(--muted)]">같은 기준으로 양쪽을 채점했습니다</span>}
       >
-        <table className="w-full text-[13px]">
-          <thead>
-            <tr className="text-[11.5px] text-[var(--muted)]">
-              <th className="pb-2 text-left font-normal">축</th>
-              <th className="pb-2 text-right font-normal">일반 프롬프트</th>
-              <th className="pb-2 text-right font-normal">Voice Engine</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.keys(sVoiced.axes).map((k) => {
-              const a = (sBase.axes as Record<string, number>)[k];
-              const b = (sVoiced.axes as Record<string, number>)[k];
-              return (
-                <tr key={k} className="border-t border-[var(--line)]">
-                  <td className="py-1.5">{AXIS_LABEL[k] ?? k}</td>
-                  <td className="tnum py-1.5 text-right text-[var(--muted)]">{a}</td>
-                  <td className={`tnum py-1.5 text-right ${b > a ? "font-semibold" : ""}`}>{b}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <div className="mb-1.5 grid grid-cols-[96px_1fr_1fr] gap-3 text-[11.5px] text-[var(--muted)]">
+          <span />
+          <span>일반 프롬프트</span>
+          <span>Voice Engine</span>
+        </div>
+        {Object.keys(sVoiced.axes).map((k) => (
+          <ScoreBar
+            key={k}
+            label={AXIS_LABEL[k] ?? k}
+            a={(sBase.axes as Record<string, number>)[k]}
+            b={(sVoiced.axes as Record<string, number>)[k]}
+          />
+        ))}
         <div className="mt-3 space-y-1 border-t border-[var(--line)] pt-3 text-[12px] text-[var(--muted)]">
           <div>일반 프롬프트: {sBase.notes.find((n) => n.includes("자사 언급")) ?? sBase.notes[0]}</div>
           <div>Voice Engine: {sVoiced.notes.find((n) => n.includes("자사 언급")) ?? sVoiced.notes[0]}</div>

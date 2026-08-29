@@ -127,6 +127,13 @@ export async function POST(req: NextRequest) {
           .eq("id", suggestionId)
           .eq("status", "accepted");
       }
+      await supabaseAdmin().from("audit_log").insert({
+        entity: "topic_suggestions",
+        entity_id: suggestionId ?? null,
+        action: "generation_failed",
+        actor: "system",
+        detail: { error: detail.slice(0, 300) },
+      });
     } catch {
       /* 되돌리기 실패는 원래 오류를 덮지 않는다 */
     }
