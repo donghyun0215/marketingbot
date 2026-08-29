@@ -162,8 +162,11 @@ export function profileToInstructions(p: VoiceProfile): string {
   return [
     `문장 길이는 평균 ${p.sentence.mean}자, 대부분 ${p.sentence.p25}~${p.sentence.p75}자 사이에 둔다.`,
     `문단은 평균 ${p.paragraph.meanSentences}문장으로 끊는다.`,
-    `종결 어미는 한 가지로 통일한다. 주력은 ${Object.entries(p.endings).sort((a, b) => b[1] - a[1])[0][0]}이며,`,
-    `문장마다 "습니다"와 "해요"를 번갈아 쓰지 않는다. 문체가 흔들리면 사람이 쓴 글로 읽히지 않는다.`,
+    `종결 어미의 주력은 ${Object.entries(p.endings).sort((a, b) => b[1] - a[1])[0][0]}로 간다.`,
+    `문장마다 번갈아 쓰지 않는다. 문체가 흔들리면 기계가 쓴 글로 읽힌다.`,
+    `다만 끝까지 한 문체로만 가면 딱딱하다. 독자에게 직접 말을 거는 대목,`,
+    `공감하거나 되묻는 대목에서만 부드러운 어미를 쓴다. 글 전체에서 한두 번이면 충분하고,`,
+    `그 자리는 내용상 이유가 있어야 한다. 이유 없이 바꾸면 안 쓰느니만 못하다.`,
     `자사 지칭(우리/코드프레소)은 1,500자 기준 ${Math.round(p.firstPersonDensity * 1.5)}회 정도가 자연스럽다.`,
     `수치·사례 인용은 1,500자 기준 ${Math.max(2, Math.round(p.evidenceDensity * 1.5))}회 정도. 그 이상 넣으면 오히려 어색하다.`,
     `근거 없는 형용사보다 구체적 사실을 쓰되, 숫자로 도배하지 않는다.`,

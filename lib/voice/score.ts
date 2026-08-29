@@ -92,7 +92,11 @@ function rhythmScore(text: string, p: VoiceProfile, notes: string[]) {
   let switches = 0;
   for (let i = 1; i < seq.length; i++) if (seq[i] !== seq[i - 1]) switches++;
   const switchRate = seq.length > 2 ? (switches / (seq.length - 1)) * 100 : 0;
-  // p75(22%)까지는 만점, 그 위로는 비례 감점
+  // 상한만 두고 하한은 두지 않는다.
+  // 실측: 46편 중 12편(26%)이 전환률 2% 미만이다. 한 문체로 끝까지 가는 것도
+  // 실제 코드프레소의 스타일이므로, 0%를 결함으로 처리하면 사람이 쓴 글을 깎게 된다.
+  // 문제는 "섞느냐"가 아니라 "아무 데서나 바뀌느냐"이며, 후자만 감점한다.
+  // (섞을 자리를 고르는 판단은 채점기가 아니라 프롬프트와 사람 승인이 맡는다)
   const coherenceScore = Math.max(0, Math.min(100, 100 - Math.max(0, switchRate - 22) * 1.6));
 
   notes.push(
