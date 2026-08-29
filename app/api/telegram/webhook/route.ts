@@ -46,6 +46,22 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ ok: true });
       }
 
+      if (action === "adopt") {
+        // 판단 두 지점(주제 채택 / 초안 승인)을 모두 폰에서 끝낼 수 있게 한다.
+        // 생성 로직은 대시보드와 동일한 라우트를 재사용해 동작이 갈라지지 않게 한다.
+        await answerCallback(cq.id, "초안을 생성합니다. 잠시만요.");
+        const res = await fetch(`${req.nextUrl.origin}/api/topics/adopt`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ suggestionId: contentId }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          await sendMessage(`⚠️ ${esc(String(data.error ?? "생성 실패"))}`);
+        }
+        return NextResponse.json({ ok: true });
+      }
+
       if (action === "approve") {
         await approve(contentId, actor);
         await answerCallback(cq.id, "승인했습니다.");
