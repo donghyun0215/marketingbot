@@ -63,7 +63,10 @@ export function modelName(): string {
     case "gemini":
       return process.env.GEMINI_MODEL ?? "gemini-3.6-flash";
     case "groq":
-      return process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile";
+      // 실제로 호출된 모델을 우선한다. 설정값을 그대로 라벨로 쓰면
+      // 자동 선택된 모델과 다른 이름이 기록된다(실제로 발생: gpt-oss로 생성했는데
+      // 라벨은 폐기된 llama로 남았다). 라벨이 틀리면 비교 조건 명시가 거짓이 된다.
+      return groqModelCache ?? process.env.GROQ_MODEL ?? "groq(자동 선택)";
     case "anthropic":
       return process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6";
   }

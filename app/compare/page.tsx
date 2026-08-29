@@ -15,11 +15,34 @@ export const fetchCache = "force-no-store";
 export default async function Compare() {
   const { data } = await supabaseAdmin()
     .from("contents")
-    .select("title, body, baseline_body, voice_score, baseline_voice_score, voice_breakdown")
+    .select("id, title, body, baseline_body, voice_score, baseline_voice_score, voice_breakdown, suggestion_id")
     .not("baseline_body", "is", null)
     .order("id", { ascending: false })
     .limit(1);
   const c = data?.[0];
+
+  // 실험 조건: 어떤 모델로, 어떤 입력을 넣었는지. 스크린샷 한 장에 조건이 다 보여야
+  // "왜 그냥 ChatGPT가 아닌가"의 비교가 성립한다.
+  let model = "";
+  let inputRationale = "";
+  if (c) {
+    const { data: gen } = await supabaseAdmin()
+      .from("audit_log")
+      .select("detail")
+      .eq("entity", "contents")
+      .eq("entity_id", c.id)
+      .eq("action", "generated")
+      .maybeSingle();
+    model = String((gen?.detail as any)?.model ?? "");
+    if (c.suggestion_id) {
+      const { data: sg } = await supabaseAdmin()
+        .from("topic_suggestions")
+        .select("rationale")
+        .eq("id", c.suggestion_id)
+        .maybeSingle();
+      inputRationale = String(sg?.rationale ?? "");
+    }
+  }
 
   if (!c) {
     return (
@@ -60,9 +83,22 @@ export default async function Compare() {
         </p>
       </div>
 
+      <div className="rise grid gap-px overflow-hidden rounded-[var(--r)] border border-[var(--line)] bg-[var(--line)] shadow-[var(--shadow-1)] md:grid-cols-3">
+        {[
+          { k: "모델 (동일)", v: model || "—" },
+          { k: "주제 (동일)", v: c.title },
+          { k: "입력 근거 (동일)", v: inputRationale || "실데이터 기반 주제 추천" },
+        ].map((x) => (
+          <div key={x.k} className="bg-[var(--surface)] px-4 py-3">
+            <div className="text-[11.5px] font-medium text-[var(--muted)]">{x.k}</div>
+            <div className="mt-1 text-[13px] leading-snug">{x.v}</div>
+          </div>
+        ))}
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel
-          title="일반 프롬프트"
+          title="일반 프롬프트 — 주제만 전달"
           aside={
             <span className="text-[12px] text-[var(--muted)]">
               자사 용어 {sBase.axes.terminology >= 90 ? "정확" : "불일치"} · 자사 근거 {sBase.axes.structure}
@@ -74,7 +110,7 @@ export default async function Compare() {
           </pre>
         </Panel>
         <Panel
-          title="Voice Engine"
+          title="Voice Engine — 문체·규칙·근거 주입"
           aside={
             <span className="text-[12px] font-medium">
               자사 근거 {sVoiced.axes.structure} · 리듬 {sVoiced.axes.rhythm}
