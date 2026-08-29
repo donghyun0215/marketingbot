@@ -225,81 +225,114 @@ function card(slide, { x, y, w, h, fill = WHITE, line = LINE }) {
   s.addNotes("영상 재생 2분. 재생 전 '지금 보시는 숫자는 전부 제공받은 실데이터입니다' 한마디만 합니다.");
 }
 
-/* ─────────── 6. Baseline ─────────── */
+/* ─────────── 6. Baseline — 실제 결과물을 직접 읽힌다 ─────────── */
 {
   const s = pres.addSlide();
   s.background = { color: CANVAS };
-  titled(s, "BASELINE 비교", "왜 그냥 범용 LLM을 쓰지 않는가",
-    "같은 모델(gemini-3.6-flash), 같은 주제. 바뀐 것은 문체·학습된 규칙·실데이터 근거 셋뿐입니다");
+  titled(s, "BASELINE 비교", "같은 모델에 같은 주제를 넣었습니다",
+    "gemini-3.6-flash · 주제: \"인재 채용 전략\"을 찾는 실무자를 위한 실행 가이드 · 바뀐 것은 문체·학습된 규칙·실데이터 근거뿐입니다");
 
-  card(s, { x: M, y: 2.25, w: 5.5, h: 1.5 });
-  s.addText("일반 프롬프트", { x: M + 0.35, y: 2.48, w: 4, h: 0.28, isTextBox: true, margin: 0, fontFace: B, fontSize: 12.5, color: MUTED });
-  s.addText([{ text: "83", options: { fontSize: 34, bold: true, color: INK } },
-             { text: "점 · 5,188자 · 자사 언급 0회", options: { fontSize: 13.5, color: MUTED } }], {
-    x: M + 0.35, y: 2.85, w: 5.0, h: 0.6, isTextBox: true, margin: 0, fontFace: H });
+  // 왼쪽 — 일반 프롬프트
+  card(s, { x: M, y: 2.05, w: 5.6, h: 3.55 });
+  s.addText([
+    { text: "일반 프롬프트", options: { fontSize: 13, bold: true, color: INK } },
+    { text: "   주제만 전달", options: { fontSize: 11.5, color: MUTED } },
+  ], { x: M + 0.3, y: 2.24, w: 5.0, h: 0.28, isTextBox: true, margin: 0, fontFace: B });
 
-  card(s, { x: M + 5.95, y: 2.25, w: 5.5, h: 1.5, line: BLUE });
-  s.addText("Voice Engine", { x: M + 6.3, y: 2.48, w: 4, h: 0.28, isTextBox: true, margin: 0, fontFace: B, fontSize: 12.5, color: BLUE });
-  s.addText([{ text: "96", options: { fontSize: 34, bold: true, color: BLUE } },
-             { text: "점 · 1,196자 · 자사 언급 3회", options: { fontSize: 13.5, color: MUTED } }], {
-    x: M + 6.3, y: 2.85, w: 5.0, h: 0.6, isTextBox: true, margin: 0, fontFace: H });
-
-  s.addChart(
-    pres.ChartType.bar,
-    [
-      { name: "일반 프롬프트", labels: ["어휘 재현", "문장 리듬", "용어 표기", "자사 근거", "범용 표지 없음"], values: [100, 67, 80, 53, 100] },
-      { name: "Voice Engine", labels: ["어휘 재현", "문장 리듬", "용어 표기", "자사 근거", "범용 표지 없음"], values: [100, 80, 100, 98, 100] },
-    ],
-    {
-      x: M, y: 3.95, w: 7.4, h: 2.75,
-      barDir: "bar", barGrouping: "clustered",
-      chartColors: ["B9C2D0", BLUE],
-      showValue: true, dataLabelPosition: "outEnd", dataLabelFontSize: 10, dataLabelColor: INK,
-      catAxisLabelColor: MUTED, catAxisLabelFontSize: 11,
-      valAxisLabelColor: MUTED, valAxisLabelFontSize: 10, valAxisMaxVal: 110,
-      valGridLine: { color: LINE, size: 1 }, catGridLine: { style: "none" },
-      showLegend: true, legendPos: "t", legendFontSize: 11, legendColor: MUTED,
-    }
-  );
-
-  card(s, { x: M + 7.7, y: 3.95, w: 3.75, h: 2.75 });
-  s.addText("점수는 어디서 왔는가", {
-    x: M + 8.0, y: 4.18, w: 3.2, h: 0.3, isTextBox: true, margin: 0,
-    fontFace: H, fontSize: 14, bold: true, color: INK });
   s.addText(
-    "코드프레소가 실제 발행한 글 46편에서 역산한 기준입니다. 문장 평균 46.9자, 어미 전환률 10.4%, 브랜드 언급 1.09회/1,000자 모두 그 46편의 실측값입니다.\n\n" +
-      "기준을 고칠 때마다 46편을 다시 채점해 중앙값 92점이 유지되어야 채택합니다. 네 차례 폐기·수정했고 기록이 남아 있습니다.",
-    { x: M + 8.0, y: 4.55, w: 3.2, h: 2.0, isTextBox: true, margin: 0,
-      fontFace: B, fontSize: 11, color: "38445A", lineSpacing: 16 }
+    "# 인재 채용 전략을 찾는 실무자를 위한 실행 가이드\n\n" +
+    "인재 확보는 기업 성장의 핵심이지만, \u201C좋은 사람을 어떻게 찾고, 어떻게 유지할까?\u201D 라는 질문에 대한 답은 늘 복잡합니다. 이번 포스트에서는 **실무자가 바로 적용할 수 있는 구체적인 채용 전략**을 단계별로 정리했습니다.\n\n" +
+    "## 1\uFE0F\u20E3 채용 목표와 KPI 정의하기\n\n" +
+    "| 단계 | 핵심 질문 | 구체적인 산출물 |\n" +
+    "| 1-1 | 우리 조직이 채용해야 할 인재는 누구인가? | 포지션 정의서 |\n\n" +
+    "> Tip: KPI는 SMART 원칙에 맞춰 설정하면 …",
+    { x: M + 0.3, y: 2.62, w: 5.0, h: 2.8, isTextBox: true, margin: 0,
+      fontFace: B, fontSize: 10.5, color: "5A6675", lineSpacing: 15 }
   );
-  s.addNotes("45초. 자사 근거 53 대 98만 짚습니다. 점수 출처 질문이 나오기 전에 오른쪽 카드로 먼저 답합니다.");
+
+  // 오른쪽 — Voice Engine
+  card(s, { x: M + 5.95, y: 2.05, w: 5.6, h: 3.55, line: BLUE });
+  s.addText([
+    { text: "Voice Engine", options: { fontSize: 13, bold: true, color: BLUE } },
+    { text: "   문체 · 규칙 · 근거 주입", options: { fontSize: 11.5, color: MUTED } },
+  ], { x: M + 6.25, y: 2.24, w: 5.0, h: 0.28, isTextBox: true, margin: 0, fontFace: B });
+
+  s.addText(
+    "IT 기업 A사는 검증되지 않은 이력서만 보고 개발자를 채용했다가 조기 퇴사 문제를 겪었습니다. 실무에 필요한 실제 기술 역량을 입사 전에 파악하기 어려웠기 때문입니다.\n\n" +
+    "최근 포털에서 인재 채용 전략 관련 검색 노출 221회가 발생했으나 평균순위 20.6위로 실질적인 해결책을 찾지 못한 채용 담당자가 많습니다.\n\n" +
+    "### 서류 검증을 넘어선 실제 역량 중심의 평가 설계\n" +
+    "코드프레소의 SkillCertify는 지원자가 실제 개발 환경에서 코드를 작성하고 문제를 해결하는 과정을 다각도로 평가합니다. …",
+    { x: M + 6.25, y: 2.62, w: 5.0, h: 2.8, isTextBox: true, margin: 0,
+      fontFace: B, fontSize: 10.5, color: INK, lineSpacing: 15 }
+  );
+
+  // 아래 대조 라벨 — 판단 근거를 문장이 아니라 사실로 제시한다
+  const facts = [
+    ["도입부", "일반론과 목차", "고객사 사례"],
+    ["수치", "없음", "검색 노출 221회 · 20.6위"],
+    ["회사 이름", "0회", "3회 · SkillCertify 언급"],
+    ["분량", "5,188자", "1,196자"],
+  ];
+  facts.forEach((f, i) => {
+    const x = M + i * 2.95;
+    card(s, { x, y: 5.78, w: 2.75, h: 0.92 });
+    s.addText(f[0], { x: x + 0.22, y: 5.9, w: 2.4, h: 0.24, isTextBox: true, margin: 0,
+      fontFace: B, fontSize: 10.5, color: MUTED });
+    s.addText([
+      { text: f[1], options: { color: "9AA5B4" } },
+      { text: "   →   ", options: { color: "C3CAD6" } },
+      { text: f[2], options: { color: BLUE, bold: true } },
+    ], { x: x + 0.22, y: 6.18, w: 2.4, h: 0.42, isTextBox: true, margin: 0, fontFace: B, fontSize: 11 });
+  });
+
+  s.addNotes("45초. 두 글을 소리 내어 비교하지 말고, 왼쪽 첫 문장과 오른쪽 첫 문장만 읽습니다. 아래 네 칸이 근거입니다.");
 }
 
-/* ─────────── 7. 무엇이 다른가 ─────────── */
+/* ─────────── 7. 점수 채택 기준 ─────────── */
 {
   const s = pres.addSlide();
   s.background = { color: CANVAS };
-  titled(s, "차이", "범용 LLM은 사람이 기억해서 써야 하는 도구입니다");
+  titled(s, "검증", "점수 채택 기준",
+    "이 점수는 저희가 정한 이상적인 글이 아니라, 코드프레소가 실제 발행한 글 46편에서 역산한 기준입니다");
 
-  const rows = [
-    ["근거", "회사의 실적과 사례를 모르니 일반론으로 채웁니다", "자사 성과 데이터에서 인용합니다"],
-    ["기억", "어제 지적받은 내용을 기억하지 못합니다", "반려 사유가 규칙으로 남아 다음 생성에 적용됩니다"],
-    ["시작", "사람이 열어야 시작됩니다", "데이터를 보고 먼저 제안하고 사람을 부릅니다"],
+  const basis = [
+    ["문장 평균 길이", "46.9자"],
+    ["어미 전환률 중앙값", "10.4%"],
+    ["브랜드 언급", "1.09회 / 1,000자"],
+    ["수치 인용", "1.26회 / 1,000자"],
   ];
-  s.addText("범용 LLM", { x: M + 1.7, y: 2.2, w: 4.5, h: 0.28, isTextBox: true, margin: 0, fontFace: B, fontSize: 12, color: MUTED, bold: true });
-  s.addText("Marketing Pulse", { x: M + 6.85, y: 2.2, w: 4.5, h: 0.28, isTextBox: true, margin: 0, fontFace: B, fontSize: 12, color: BLUE, bold: true });
-  rows.forEach((r, i) => {
-    const y = 2.6 + i * 1.12;
-    s.addText(r[0], { x: M, y: y + 0.28, w: 1.5, h: 0.3, isTextBox: true, margin: 0, fontFace: H, fontSize: 15, bold: true, color: INK });
-    card(s, { x: M + 1.6, y, w: 4.9, h: 0.94 });
-    s.addText(r[1], { x: M + 1.9, y: y + 0.2, w: 4.4, h: 0.6, isTextBox: true, margin: 0, fontFace: B, fontSize: 12.5, color: MUTED });
-    card(s, { x: M + 6.75, y, w: 4.9, h: 0.94, line: BLUE });
-    s.addText(r[2], { x: M + 7.05, y: y + 0.2, w: 4.4, h: 0.6, isTextBox: true, margin: 0, fontFace: B, fontSize: 12.5, color: INK });
+  s.addText("기준값은 전부 그 46편의 실측값입니다", {
+    x: M, y: 2.15, w: 6, h: 0.3, isTextBox: true, margin: 0,
+    fontFace: H, fontSize: 14, bold: true, color: INK });
+  basis.forEach((b, i) => {
+    const y = 2.58 + i * 0.72;
+    card(s, { x: M, y, w: 5.6, h: 0.6 });
+    s.addText(b[0], { x: M + 0.28, y: y + 0.16, w: 3.4, h: 0.28, isTextBox: true, margin: 0,
+      fontFace: B, fontSize: 12.5, color: MUTED });
+    s.addText(b[1], { x: M + 3.6, y: y + 0.14, w: 1.8, h: 0.3, isTextBox: true, margin: 0,
+      fontFace: H, fontSize: 13.5, bold: true, color: INK, align: "right" });
   });
-  s.addText("이 시스템은 사람 대신 기억하는 구조입니다.", {
-    x: M, y: 6.15, w: 11, h: 0.4, isTextBox: true, margin: 0,
-    fontFace: H, fontSize: 17, bold: true, color: BLUE });
-  s.addNotes("25초. 마지막 문장을 천천히 읽고 다음 장으로 넘어갑니다.");
+
+  card(s, { x: M + 5.95, y: 2.58, w: 5.6, h: 2.02, line: BLUE });
+  s.addText("기준을 고칠 때마다 통과해야 하는 관문", {
+    x: M + 6.25, y: 2.8, w: 5.0, h: 0.3, isTextBox: true, margin: 0,
+    fontFace: H, fontSize: 14, bold: true, color: BLUE });
+  s.addText(
+    "수정한 채점 기준으로 그 46편을 다시 채점해 중앙값 92점이 유지되어야 채택하고, 그러지 못하면 폐기합니다.\n\n" +
+    "실제로 네 차례 폐기하거나 고쳤습니다. 저희 결과에 유리하도록 맞춘 지표가 아니라, 고객사의 글로 검증한 지표라는 뜻입니다.",
+    { x: M + 6.25, y: 3.2, w: 5.0, h: 1.3, isTextBox: true, margin: 0,
+      fontFace: B, fontSize: 12, color: "38445A", lineSpacing: 17 });
+
+  card(s, { x: M + 5.95, y: 4.78, w: 5.6, h: 1.6 });
+  s.addText("폐기한 지표의 예", {
+    x: M + 6.25, y: 4.96, w: 5.0, h: 0.28, isTextBox: true, margin: 0,
+    fontFace: H, fontSize: 13, bold: true, color: INK });
+  s.addText(
+    "\u201C자사 글은 굵은 글씨를 쓰지 않는다\u201D는 신호로 30점 차이를 만들었지만, 원본을 다시 확인하니 실제로는 1,000자당 9.73회 사용하고 있었습니다. 저희 수집 과정이 만든 착시였고, 그 신호는 폐기했습니다.",
+    { x: M + 6.25, y: 5.3, w: 5.0, h: 1.0, isTextBox: true, margin: 0,
+      fontFace: B, fontSize: 11.5, color: MUTED, lineSpacing: 16 });
+
+  s.addNotes("35초. 왼쪽은 훑고, 오른쪽 상단 관문만 또박또박 말합니다. 폐기 사례는 시간이 없으면 생략하고 질문 때 씁니다.");
 }
 
 /* ─────────── 8. 믿을 수 있는 근거 ─────────── */
@@ -338,7 +371,7 @@ function card(slide, { x, y, w, h, fill = WHITE, line = LINE }) {
 {
   const s = pres.addSlide();
   s.background = { color: CANVAS };
-  titled(s, "범위", "한 일과 하지 않은 일");
+  titled(s, "SCOPE", "Functionalities & Limitations");
 
   const cov = [
     ["실제 구현", "아이디어 · 기획 · 원고 · 성과 취합 · 데이터 축적", GREEN, "E8F3EE"],
