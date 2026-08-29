@@ -20,7 +20,19 @@ export function AdoptButton({ suggestionId }: { suggestionId: number }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ suggestionId }),
       });
-      const data = await res.json();
+      // 서버가 시간 초과로 종료되면 JSON이 아니라 HTML이 온다. 그대로 파싱하면
+      // "Unexpected token" 같은 원인과 무관한 오류가 사용자에게 보인다.
+      const raw = await res.text();
+      let data: any = {};
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        throw new Error(
+          res.status === 504 || raw.startsWith("An error")
+            ? "생성이 시간 안에 끝나지 않았습니다. 잠시 후 다시 시도해 주세요."
+            : `서버 오류 (${res.status})`
+        );
+      }
       if (!res.ok) throw new Error(data.error ?? "생성에 실패했습니다");
       setState("done");
       setMessage(

@@ -172,6 +172,10 @@ async function callAnthropic(a: GenerateArgs): Promise<string> {
  * 429는 시간이 지나면 반드시 풀리는 오류이므로 길게, 여러 번 기다린다.
  */
 export async function generate(a: GenerateArgs, retries = 4): Promise<string> {
+  // 서버리스 함수에는 실행 시간 상한이 있다. 재시도로 그 시간을 다 쓰면 함수가 강제
+  // 종료되고, 서버는 JSON 대신 HTML 오류 페이지를 반환한다. 그러면 화면에는 원인과
+  // 무관한 파싱 오류가 뜬다(실제로 겪음). 기다리는 총량을 먼저 제한한다.
+  const deadline = Date.now() + 25_000;
   const p = provider();
   const fn = p === "gemini" ? callGemini : p === "groq" ? callGroq : callAnthropic;
   let lastError: unknown;
@@ -201,7 +205,9 @@ export async function generate(a: GenerateArgs, retries = 4): Promise<string> {
       const retriable = rateLimited || /5\d\d/.test(msg);
       if (!retriable || i === retries) break;
       // 분당 한도는 초 단위로 풀린다.
-      const waitMs = rateLimited ? 8000 * (i + 1) : 1500 * (i + 1);
+      const waitMs = rateLimited ? 6000 : 1500 * (i + 1);
+      // 남은 시간보다 오래 기다려야 한다면 재시도하지 않고 원인을 그대로 알린다.
+      if (Date.now() + waitMs > deadline) break;
       await new Promise((r) => setTimeout(r, waitMs));
     }
   }
