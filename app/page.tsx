@@ -81,7 +81,7 @@ export default async function Dashboard() {
         ]}
       />
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Metric label="블로그 클릭" value={fmt(sum("blog", "clicks"))} note={`노출 ${fmt(sum("blog", "impressions"))}회`} delay={40} />
         <Metric label="링크드인 클릭" value={fmt(sum("linkedin", "clicks"))} note={`노출 ${fmt(sum("linkedin", "impressions"))}회`} delay={70} />
         <Metric label="진성 문의" value={inquiries.length} unit="건" note="내부·허수 제외" delay={100} />
@@ -94,7 +94,7 @@ export default async function Dashboard() {
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
+      <div className="grid gap-4 lg:grid-cols-2">
         <Panel
           title="승인 대기"
           delay={160}

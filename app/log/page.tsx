@@ -64,7 +64,7 @@ export default async function LogPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-4">
         {[
           { label: "전체 기록", value: log.length, tone: "" },
           { label: "사람이 내린 결정", value: byHuman.length, tone: "text-[var(--accent)]" },
