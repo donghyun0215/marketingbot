@@ -199,13 +199,17 @@ function card(slide, { x, y, w, h, fill = WHITE, line = LINE }) {
     x: M + 6.3, y: 3.55, w: 4.7, h: 0.8, isTextBox: true, margin: 0,
     fontFace: B, fontSize: 13, color: "38445A", lineSpacing: 20 });
 
-  card(s, { x: M, y: 4.95, w: W - M * 2, h: 1.15 });
+  card(s, { x: M, y: 4.9, w: W - M * 2, h: 1.5 });
   s.addText("고객사명은 차단하지 않고 확인 대상으로만 올립니다", {
-    x: M + 0.4, y: 5.15, w: 11, h: 0.3, isTextBox: true, margin: 0,
+    x: M + 0.4, y: 5.1, w: 11, h: 0.3, isTextBox: true, margin: 0,
     fontFace: H, fontSize: 14.5, bold: true, color: INK });
   s.addText("사례 콘텐츠에는 고객사명이 정당하게 등장합니다. 써도 되는지는 사람이 판단할 문제입니다. — 실제 발행글 46편 검증에서 잘못된 차단 0건", {
-    x: M + 0.4, y: 5.5, w: 10.8, h: 0.4, isTextBox: true, margin: 0,
+    x: M + 0.4, y: 5.45, w: 10.8, h: 0.32, isTextBox: true, margin: 0,
     fontFace: B, fontSize: 12.5, color: MUTED });
+  s.addShape(pres.ShapeType.rect, { x: M + 0.4, y: 5.85, w: 10.8, h: 0.012, fill: { color: LINE }, line: { width: 0 } });
+  s.addText("모든 결정은 누가 · 언제 · 왜와 함께 기록되며, 사람의 결정과 시스템의 실행이 구분되어 남습니다.", {
+    x: M + 0.4, y: 5.95, w: 10.8, h: 0.32, isTextBox: true, margin: 0,
+    fontFace: B, fontSize: 12.5, color: BLUE });
   s.addNotes("30초. 버튼이 빨라서가 아니라 읽을 양이 줄어서 빨라졌다는 점을 강조합니다.");
 }
 
@@ -285,85 +289,7 @@ function card(slide, { x, y, w, h, fill = WHITE, line = LINE }) {
     ], { x: x + 0.22, y: 6.18, w: 2.4, h: 0.42, isTextBox: true, margin: 0, fontFace: B, fontSize: 11 });
   });
 
-  s.addNotes("45초. 두 글을 소리 내어 비교하지 말고, 왼쪽 첫 문장과 오른쪽 첫 문장만 읽습니다. 아래 네 칸이 근거입니다.");
-}
-
-/* ─────────── 7. 점수 채택 기준 ─────────── */
-{
-  const s = pres.addSlide();
-  s.background = { color: CANVAS };
-  titled(s, "검증", "점수 채택 기준",
-    "이 점수는 저희가 정한 이상적인 글이 아니라, 코드프레소가 실제 발행한 글 46편에서 역산한 기준입니다");
-
-  // 기준값은 한 줄로 압축한다. 발표에서 읽지 않고 눈으로 확인만 시킨다.
-  card(s, { x: M, y: 2.15, w: W - M * 2, h: 0.95 });
-  const basis = [
-    ["문장 평균 길이", "46.9자"],
-    ["어미 전환률 중앙값", "10.4%"],
-    ["브랜드 언급", "1.09회 / 1,000자"],
-    ["수치 인용", "1.26회 / 1,000자"],
-  ];
-  basis.forEach((bs, i) => {
-    const x = M + 0.35 + i * 2.85;
-    s.addText(bs[0], { x, y: 2.36, w: 2.6, h: 0.24, isTextBox: true, margin: 0,
-      fontFace: B, fontSize: 11, color: MUTED });
-    s.addText(bs[1], { x, y: 2.62, w: 2.6, h: 0.3, isTextBox: true, margin: 0,
-      fontFace: H, fontSize: 15, bold: true, color: INK });
-  });
-
-  // 관문이 이 장의 주인공이다
-  card(s, { x: M, y: 3.35, w: W - M * 2, h: 1.7, line: BLUE });
-  s.addText("기준을 고칠 때마다 통과해야 하는 관문", {
-    x: M + 0.45, y: 3.6, w: 8, h: 0.34, isTextBox: true, margin: 0,
-    fontFace: H, fontSize: 19, bold: true, color: BLUE });
-  s.addText(
-    "수정한 채점 기준으로 그 46편을 다시 채점해 중앙값 92점이 유지되어야 채택하고, 그러지 못하면 폐기합니다.\n" +
-    "실제로 네 차례 폐기하거나 고쳤습니다. 저희 결과에 유리하도록 맞춘 지표가 아니라, 고객사의 글로 검증한 지표입니다.",
-    { x: M + 0.45, y: 4.05, w: 10.8, h: 0.85, isTextBox: true, margin: 0,
-      fontFace: B, fontSize: 14, color: "38445A", lineSpacing: 22 });
-
-  card(s, { x: M, y: 5.3, w: W - M * 2, h: 1.25 });
-  s.addText("폐기한 지표의 예", {
-    x: M + 0.45, y: 5.5, w: 5, h: 0.28, isTextBox: true, margin: 0,
-    fontFace: H, fontSize: 13.5, bold: true, color: INK });
-  s.addText(
-    "\u201C자사 글은 굵은 글씨를 쓰지 않는다\u201D는 신호로 30점 차이를 만들었지만, 원본을 다시 확인하니 실제로는 1,000자당 9.73회 사용하고 있었습니다. 저희 수집 과정이 만든 착시였고, 그 신호는 폐기했습니다.",
-    { x: M + 0.45, y: 5.84, w: 10.8, h: 0.6, isTextBox: true, margin: 0,
-      fontFace: B, fontSize: 12.5, color: MUTED, lineSpacing: 18 });
-
-  s.addNotes("20초. 상단 기준값은 읽지 않고 관문 한 문장만 말합니다. 폐기 사례는 Q&A용입니다.");
-}
-
-/* ─────────── 8. 믿을 수 있는 근거 ─────────── */
-{
-  const s = pres.addSlide();
-  s.background = { color: CANVAS };
-  titled(s, "신뢰", "결과를 믿을 수 있는 근거");
-
-  const items = [
-    ["승인 게이트", "사람의 결정 없이는 발행되지 않습니다. 반려에는 사유 입력이 필수입니다."],
-    ["판단 로그", "모든 결정이 누가·언제·왜와 함께 남고, 사람의 결정과 시스템의 실행이 구분됩니다."],
-    ["추적성", "추천 → 콘텐츠 → 발행 → 문의가 하나의 식별자로 이어집니다."],
-    ["오류 대응", "텔레그램 장애 시 대시보드로 처리하고, 생성 실패 시 주제를 되돌리며, 실패도 로그에 남깁니다."],
-  ];
-  items.forEach((it, i) => {
-    const x = M + (i % 2) * 5.9;
-    const y = 1.95 + Math.floor(i / 2) * 1.6;
-    card(s, { x, y, w: 5.6, h: 1.35 });
-    s.addShape(pres.ShapeType.ellipse, { x: x + 0.3, y: y + 0.3, w: 0.34, h: 0.34, fill: { color: "E7EEFD" }, line: { width: 0 } });
-    s.addText(String(i + 1), { x: x + 0.3, y: y + 0.34, w: 0.34, h: 0.26, isTextBox: true, margin: 0,
-      fontFace: H, fontSize: 12, bold: true, color: BLUE, align: "center" });
-    s.addText(it[0], { x: x + 0.78, y: y + 0.28, w: 4.5, h: 0.3, isTextBox: true, margin: 0,
-      fontFace: H, fontSize: 14.5, bold: true, color: INK });
-    s.addText(it[1], { x: x + 0.78, y: y + 0.62, w: 4.5, h: 0.6, isTextBox: true, margin: 0,
-      fontFace: B, fontSize: 12, color: MUTED, lineSpacing: 17 });
-  });
-
-  card(s, { x: M, y: 5.35, w: W - M * 2, h: 1.05 });
-  s.addText("정직하게 덧붙이면 — 생성물은 아직 블라인드 테스트를 통과하지 못합니다. 지적된 결함(문장마다 흔들리는 어미)을 지표로 만들어 전환률을 78.9%에서 0%로 낮췄습니다. 그래서 승인 게이트가 설계의 중심에 있습니다.", {
-    x: M + 0.4, y: 5.58, w: 10.8, h: 0.7, isTextBox: true, margin: 0,
-    fontFace: B, fontSize: 12.5, color: "38445A", lineSpacing: 18 });
-  s.addNotes("30초. 마지막 문단을 스스로 말하는 것이 중요합니다. 질문으로 나오기 전에 먼저 꺼냅니다.");
+  s.addNotes("35초. 왼쪽은 '어느 회사 블로그에 놔도 어색하지 않은 글' — 담당자가 지적한 문제 상태입니다. 오른쪽은 코드프레소만 쓸 수 있는 글이라고 말합니다. 절대 반대로 말하지 않도록 주의합니다.");
 }
 
 /* ─────────── 9. 범위와 다음 ─────────── */
@@ -412,6 +338,84 @@ function card(slide, { x, y, w, h, fill = WHITE, line = LINE }) {
     x: M, y: 5.2, w: 8, h: 0.3, isTextBox: true, margin: 0,
     fontFace: B, fontSize: 12.5, color: "6B7F9E" });
   s.addNotes("Q&A로 넘어갑니다.");
+}
+
+/* ─────────── 7. 점수 채택 기준 ─────────── */
+{
+  const s = pres.addSlide();
+  s.background = { color: CANVAS };
+  titled(s, "참고 자료 · Q&A용", "점수 채택 기준",
+    "이 점수는 저희가 정한 이상적인 글이 아니라, 코드프레소가 실제 발행한 글 46편에서 역산한 기준입니다");
+
+  // 기준값은 한 줄로 압축한다. 발표에서 읽지 않고 눈으로 확인만 시킨다.
+  card(s, { x: M, y: 2.15, w: W - M * 2, h: 0.95 });
+  const basis = [
+    ["문장 평균 길이", "46.9자"],
+    ["어미 전환률 중앙값", "10.4%"],
+    ["브랜드 언급", "1.09회 / 1,000자"],
+    ["수치 인용", "1.26회 / 1,000자"],
+  ];
+  basis.forEach((bs, i) => {
+    const x = M + 0.35 + i * 2.85;
+    s.addText(bs[0], { x, y: 2.36, w: 2.6, h: 0.24, isTextBox: true, margin: 0,
+      fontFace: B, fontSize: 11, color: MUTED });
+    s.addText(bs[1], { x, y: 2.62, w: 2.6, h: 0.3, isTextBox: true, margin: 0,
+      fontFace: H, fontSize: 15, bold: true, color: INK });
+  });
+
+  // 관문이 이 장의 주인공이다
+  card(s, { x: M, y: 3.35, w: W - M * 2, h: 1.7, line: BLUE });
+  s.addText("기준을 고칠 때마다 통과해야 하는 관문", {
+    x: M + 0.45, y: 3.6, w: 8, h: 0.34, isTextBox: true, margin: 0,
+    fontFace: H, fontSize: 19, bold: true, color: BLUE });
+  s.addText(
+    "수정한 채점 기준으로 그 46편을 다시 채점해 중앙값 92점이 유지되어야 채택하고, 그러지 못하면 폐기합니다.\n" +
+    "실제로 네 차례 폐기하거나 고쳤습니다. 저희 결과에 유리하도록 맞춘 지표가 아니라, 고객사의 글로 검증한 지표입니다.",
+    { x: M + 0.45, y: 4.05, w: 10.8, h: 0.85, isTextBox: true, margin: 0,
+      fontFace: B, fontSize: 14, color: "38445A", lineSpacing: 22 });
+
+  card(s, { x: M, y: 5.3, w: W - M * 2, h: 1.25 });
+  s.addText("폐기한 지표의 예", {
+    x: M + 0.45, y: 5.5, w: 5, h: 0.28, isTextBox: true, margin: 0,
+    fontFace: H, fontSize: 13.5, bold: true, color: INK });
+  s.addText(
+    "\u201C자사 글은 굵은 글씨를 쓰지 않는다\u201D는 신호로 30점 차이를 만들었지만, 원본을 다시 확인하니 실제로는 1,000자당 9.73회 사용하고 있었습니다. 저희 수집 과정이 만든 착시였고, 그 신호는 폐기했습니다.",
+    { x: M + 0.45, y: 5.84, w: 10.8, h: 0.6, isTextBox: true, margin: 0,
+      fontFace: B, fontSize: 12.5, color: MUTED, lineSpacing: 18 });
+
+  s.addNotes("20초. 상단 기준값은 읽지 않고 관문 한 문장만 말합니다. 폐기 사례는 Q&A용입니다.");
+}
+
+/* ─────────── 8. 믿을 수 있는 근거 ─────────── */
+{
+  const s = pres.addSlide();
+  s.background = { color: CANVAS };
+  titled(s, "참고 자료 · Q&A용", "결과를 믿을 수 있는 근거");
+
+  const items = [
+    ["승인 게이트", "사람의 결정 없이는 발행되지 않습니다. 반려에는 사유 입력이 필수입니다."],
+    ["판단 로그", "모든 결정이 누가·언제·왜와 함께 남고, 사람의 결정과 시스템의 실행이 구분됩니다."],
+    ["추적성", "추천 → 콘텐츠 → 발행 → 문의가 하나의 식별자로 이어집니다."],
+    ["오류 대응", "텔레그램 장애 시 대시보드로 처리하고, 생성 실패 시 주제를 되돌리며, 실패도 로그에 남깁니다."],
+  ];
+  items.forEach((it, i) => {
+    const x = M + (i % 2) * 5.9;
+    const y = 1.95 + Math.floor(i / 2) * 1.6;
+    card(s, { x, y, w: 5.6, h: 1.35 });
+    s.addShape(pres.ShapeType.ellipse, { x: x + 0.3, y: y + 0.3, w: 0.34, h: 0.34, fill: { color: "E7EEFD" }, line: { width: 0 } });
+    s.addText(String(i + 1), { x: x + 0.3, y: y + 0.34, w: 0.34, h: 0.26, isTextBox: true, margin: 0,
+      fontFace: H, fontSize: 12, bold: true, color: BLUE, align: "center" });
+    s.addText(it[0], { x: x + 0.78, y: y + 0.28, w: 4.5, h: 0.3, isTextBox: true, margin: 0,
+      fontFace: H, fontSize: 14.5, bold: true, color: INK });
+    s.addText(it[1], { x: x + 0.78, y: y + 0.62, w: 4.5, h: 0.6, isTextBox: true, margin: 0,
+      fontFace: B, fontSize: 12, color: MUTED, lineSpacing: 17 });
+  });
+
+  card(s, { x: M, y: 5.35, w: W - M * 2, h: 1.05 });
+  s.addText("정직하게 덧붙이면 — 생성물은 아직 블라인드 테스트를 통과하지 못합니다. 지적된 결함(문장마다 흔들리는 어미)을 지표로 만들어 전환률을 78.9%에서 0%로 낮췄습니다. 그래서 승인 게이트가 설계의 중심에 있습니다.", {
+    x: M + 0.4, y: 5.58, w: 10.8, h: 0.7, isTextBox: true, margin: 0,
+    fontFace: B, fontSize: 12.5, color: "38445A", lineSpacing: 18 });
+  s.addNotes("30초. 마지막 문단을 스스로 말하는 것이 중요합니다. 질문으로 나오기 전에 먼저 꺼냅니다.");
 }
 
 pres.writeFile({ fileName: "/home/claude/marketingbot/aidlc-docs/deliverables/발표덱.pptx" }).then((f) =>
