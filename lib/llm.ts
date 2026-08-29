@@ -16,6 +16,29 @@
 
 export type LlmProvider = "gemini" | "groq" | "anthropic";
 
+/**
+ * 오류 본문에서 한도의 "종류"까지 끌어낸다.
+ * 앞부분만 잘라 쓰면 분당 한도와 일일 한도를 구분할 수 없다. 실제로 그래서
+ * 일일 한도를 "30초 뒤 다시 시도하세요"라고 잘못 안내했고, 기다려도 풀리지 않았다.
+ * 무엇을 기다려야 하는지 틀리게 알려주면 사람의 판단도 함께 틀어진다.
+ */
+async function describeError(provider: string, res: Response): Promise<string> {
+  const raw = await res.text();
+  let quota = "";
+  try {
+    const body = JSON.parse(raw);
+    const details = body?.error?.details ?? [];
+    for (const d of details) {
+      for (const v of d?.violations ?? []) {
+        if (v?.quotaId) quota += ` [${v.quotaId}${v.quotaValue ? ` limit=${v.quotaValue}` : ""}]`;
+      }
+    }
+  } catch {
+    /* 본문이 JSON이 아니면 그대로 쓴다 */
+  }
+  return `${provider} ${res.status}:${quota} ${raw.slice(0, 240)}`;
+}
+
 export type GenerateArgs = {
   system?: string;
   prompt: string;
@@ -69,7 +92,7 @@ async function callGemini(a: GenerateArgs): Promise<string> {
       }),
     }
   );
-  if (!res.ok) throw new Error(`Gemini ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  if (!res.ok) throw new Error(await describeError("Gemini", res));
   const data = await res.json();
   const parts = data?.candidates?.[0]?.content?.parts ?? [];
   const text = parts
@@ -137,7 +160,7 @@ async function callGroq(a: GenerateArgs): Promise<string> {
       temperature: a.temperature ?? 0.7,
     }),
   });
-  if (!res.ok) throw new Error(`Groq ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  if (!res.ok) throw new Error(await describeError("Groq", res));
   const data = await res.json();
   return data?.choices?.[0]?.message?.content ?? "";
 }
@@ -160,7 +183,7 @@ async function callAnthropic(a: GenerateArgs): Promise<string> {
       messages: [{ role: "user", content: a.prompt }],
     }),
   });
-  if (!res.ok) throw new Error(`Anthropic ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  if (!res.ok) throw new Error(await describeError("Anthropic", res));
   const data = await res.json();
   return (data?.content ?? []).map((c: any) => c.text ?? "").join("");
 }
