@@ -86,17 +86,16 @@ export async function generateVoiced(
   input: GenerateInput,
   profile: VoiceProfile
 ): Promise<{ body: string; model: string }> {
-  let voiced = "";
-  for (let attempt = 0; attempt < 2; attempt++) {
-    voiced = await generate({
-      system: SYSTEM,
-      prompt:
-        voicedPrompt(input, profile) +
-        (attempt > 0 ? `\n\n직전 시도가 너무 짧았다. 반드시 1,400자 이상으로 쓴다.` : ""),
-      maxTokens: 6000,
-    });
-    if (voiced.length >= 1200) break;
-  }
+  // 호출은 한 번만 한다.
+  // 분량이 모자라면 다시 요청하는 루프가 있었는데, 생성 1회가 16초 안팎이라
+  // 두 번이면 서버리스 실행 상한(60초)을 넘겨 함수가 강제 종료됐다.
+  // 분량은 프롬프트에서 요구하고, 부족하면 사람이 반려하면 된다 — 그게 승인 게이트가
+  // 있는 이유다. 재시도로 시간을 쓰는 것보다 낫다.
+  const voiced = await generate({
+    system: SYSTEM,
+    prompt: voicedPrompt(input, profile),
+    maxTokens: 6000,
+  });
   return { body: voiced, model: modelName() };
 }
 
