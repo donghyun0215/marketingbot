@@ -64,6 +64,21 @@ export async function reject(contentId: number, actor: string, reason: string) {
 
   await logDecision("contents", contentId, "rejected", actor, { reason });
   await learnFromRejection(contentId, reason);
+
+  // 반려는 끝이 아니라 되돌아가는 지점이다.
+  // 사유를 규칙으로 배웠으면 같은 주제를 다시 쓸 수 있어야 한다. 그러지 않으면
+  // 규칙만 쌓이고 쓸 기회가 없어 루프가 절반만 닫힌다.
+  // 주제를 후보로 되돌려, 사람이 다시 채택하면 배운 규칙이 적용된 초안이 나온다.
+  if (data.suggestion_id) {
+    await db
+      .from("topic_suggestions")
+      .update({ status: "proposed", decided_at: null, decided_by: null })
+      .eq("id", data.suggestion_id);
+    await logDecision("topic_suggestions", data.suggestion_id, "reopened", "system", {
+      after_rejection_of: contentId,
+      reason,
+    });
+  }
   return data;
 }
 

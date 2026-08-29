@@ -20,7 +20,11 @@ export default async function Dashboard() {
       db.from("performance_metrics").select("channel, clicks, impressions, ctr"),
       db.from("inquiries").select("attribution"),
       db.from("contents").select("id, title, voice_score, fact_flags, created_at").eq("state", "pending_approval"),
-      db.from("topic_suggestions").select("id, topic, rationale, status").eq("status", "proposed").limit(4),
+      db
+      .from("topic_suggestions")
+      .select("id, topic, rationale, status, decided_at")
+      .eq("status", "proposed")
+      .limit(4),
       db.from("learned_constraints").select("rule, created_at").eq("active", true).limit(5),
     ]);
 
@@ -39,6 +43,14 @@ export default async function Dashboard() {
   const inquiries = inq ?? [];
   const count = (a: string) => inquiries.filter((i) => i.attribution === a).length;
   const attributed = count("confirmed") + count("inferred");
+
+  // 반려 이력이 있는 주제를 표시하기 위한 조회
+  const { data: rejectedContents } = await db
+    .from("contents")
+    .select("suggestion_id")
+    .eq("state", "rejected")
+    .not("suggestion_id", "is", null);
+  const rejectedTopicIds = new Set((rejectedContents ?? []).map((c) => c.suggestion_id as number));
 
   const insights = await analyze();
   const loops = await loopMetrics();
@@ -125,6 +137,11 @@ export default async function Dashboard() {
               <li key={s.id} className="py-2.5 first:pt-0">
                 <div className="text-[13.5px]">{s.topic}</div>
                 <div className="mt-1 text-[12px] leading-snug text-[var(--muted)]">{s.rationale}</div>
+                {rejectedTopicIds.has(s.id) && (
+                  <div className="mt-1 text-[11.5px] text-[var(--warn)]">
+                    이전 초안이 반려된 주제입니다. 배운 규칙을 적용해 다시 생성합니다.
+                  </div>
+                )}
                 <div className="mt-2">
                   <AdoptButton suggestionId={s.id} />
                 </div>

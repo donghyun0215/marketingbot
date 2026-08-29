@@ -116,7 +116,8 @@ export async function POST(req: NextRequest) {
         const contentId = Number(m[1]);
         await reject(contentId, `telegram:${msg.from?.id}`, msg.text);
         await sendMessage(
-          `❌ *\\#${contentId} 반려* — 다음 규칙으로 학습했습니다\\.\n_${esc(msg.text)}_`
+          `❌ *\\#${contentId} 반려* — 다음 규칙으로 학습했습니다\\.\n_${esc(msg.text)}_\n\n` +
+            `이 주제는 후보로 되돌렸습니다\\. 대시보드에서 다시 채택하면 이 규칙이 적용된 초안이 나옵니다\\.`
         );
       }
     }
