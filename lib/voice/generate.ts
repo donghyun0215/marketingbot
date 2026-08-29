@@ -81,6 +81,30 @@ export function voicedPrompt(input: GenerateInput, profile: VoiceProfile): strin
 
 const SYSTEM = "당신은 코드프레소의 B2B 마케팅 콘텐츠를 쓰는 담당자입니다.";
 
+/** 초안 하나만 생성한다. 승인 흐름은 이것만 필요하다. */
+export async function generateVoiced(
+  input: GenerateInput,
+  profile: VoiceProfile
+): Promise<{ body: string; model: string }> {
+  let voiced = "";
+  for (let attempt = 0; attempt < 2; attempt++) {
+    voiced = await generate({
+      system: SYSTEM,
+      prompt:
+        voicedPrompt(input, profile) +
+        (attempt > 0 ? `\n\n직전 시도가 너무 짧았다. 반드시 1,400자 이상으로 쓴다.` : ""),
+      maxTokens: 6000,
+    });
+    if (voiced.length >= 1200) break;
+  }
+  return { body: voiced, model: modelName() };
+}
+
+/** 대조군만 생성한다. 발표용 비교 자료를 만들 때 별도로 호출한다. */
+export async function generateBaseline(input: GenerateInput): Promise<string> {
+  return generate({ prompt: baselinePrompt(input), maxTokens: 6000 });
+}
+
 export async function generateDraft(
   input: GenerateInput,
   profile: VoiceProfile

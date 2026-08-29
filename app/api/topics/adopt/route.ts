@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { buildProfile, CorpusDoc } from "@/lib/voice/profile";
 import { buildGenericBaseline } from "@/lib/voice/generic";
 import { scoreVoice } from "@/lib/voice/score";
-import { generateDraft } from "@/lib/voice/generate";
+import { generateVoiced } from "@/lib/voice/generate";
 import { factGuard } from "@/lib/fact-guard";
 import { activeConstraints, logDecision } from "@/lib/approval";
 import { sendApprovalRequest } from "@/lib/telegram";
@@ -60,13 +60,15 @@ export async function POST(req: NextRequest) {
       Boolean
     ) as string[];
 
-    // 4) 같은 모델로 두 번 — 대조군과 실험군
-    const result = await generateDraft(
+    // 4) 초안 생성.
+    // 대조군은 여기서 만들지 않는다. 한 요청에서 두 번 생성하면 서버리스 실행 시간
+    // 상한(60초)을 넘겨 함수가 강제 종료된다(실제로 겪음: 61초 타임아웃).
+    // 승인 흐름에 필요한 것은 초안 하나뿐이고, 대조군은 발표 자료용이므로 분리한다.
+    const result = await generateVoiced(
       { topic: suggestion.topic, channel: suggestion.channel, evidence, constraints },
       profile
     );
-    const voiced = scoreVoice(result.voiced.body, profile, base);
-    const baseline = scoreVoice(result.baseline.body, profile, base);
+    const voiced = scoreVoice(result.body, profile, base);
 
     // 5) 사실 검사
     const guard = factGuard(result.voiced.body);
@@ -76,14 +78,14 @@ export async function POST(req: NextRequest) {
       .insert({
         suggestion_id: suggestionId, // 루프 4: 추천 → 콘텐츠 → 성과 체인
         title: suggestion.topic,
-        body: result.voiced.body,
+        body: result.body,
         channel: suggestion.channel,
         state: "pending_approval",
         voice_score: voiced.total,
         voice_breakdown: voiced.axes,
         fact_flags: guard.flags,
-        baseline_body: result.baseline.body,
-        baseline_voice_score: baseline.total,
+        baseline_body: null, // /api/contents/baseline 으로 나중에 생성한다
+        baseline_voice_score: null,
       })
       .select()
       .single();
@@ -91,7 +93,6 @@ export async function POST(req: NextRequest) {
     await logDecision("contents", content!.id, "generated", "system", {
       model: result.model,
       voice_score: voiced.total,
-      baseline_voice_score: baseline.total,
       constraints_applied: constraints.length,
       review_points: guard.reviewPoints,
     });
@@ -111,7 +112,6 @@ export async function POST(req: NextRequest) {
       ok: true,
       contentId: content!.id,
       voiceScore: voiced.total,
-      baselineScore: baseline.total,
       reviewPoints: guard.reviewPoints,
       constraintsApplied: constraints.length,
     });
