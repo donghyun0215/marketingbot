@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     const voiced = scoreVoice(result.body, profile, base);
 
     // 5) 사실 검사
-    const guard = factGuard(result.voiced.body);
+    const guard = factGuard(result.body);
 
     const { data: content } = await db
       .from("contents")
